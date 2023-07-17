@@ -1,0 +1,68 @@
+---
+title: "In-season estimates of ad-intact fish returning to the Krassel PIT array"
+author:
+- name: Mike Ackerman
+  affiliation: Research Scientist
+- name: Ryan N. Kinzer
+  affiliation: Fisheries Data Analyst and Coordinator
+- name: Jason Vogel
+  affiliation: Research Division Director
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  bookdown::pdf_document2:
+    citation_package: biblatex #natbib
+    number_sections: no
+    keep_tex: yes
+    fig_caption: yes
+    latex_engine: pdflatex #xelatex
+    template: NPT_report_template2.tex
+  bookdown::html_document2:
+    number_sections: no
+    fig_caption: yes
+    toc: yes
+    floating_toc: yes
+    df_print: paged
+shorttitle: Ad-Intact Estimates
+geometry: margin=1in
+fontfamily: mathpazo
+fontsize: 11pt
+branding: no
+bibliography:
+- references.bib
+link-citations: true
+csl: "american-fisheries-society.csl" # Insert path for the bib-style
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(kableExtra)
+
+opts_chunk$set(echo = FALSE, message = FALSE, error = FALSE,
+                      warning = FALSE)
+
+options(knitr.kable.NA = '-')
+```
+
+## Background
+
+Provide problem statement and why this work is necessary.
+
+## Summary
+
+Summarize findings
+
+## Results
+
+### In-season Estimates
+Mike is handling this part.
+
+### Run-Timing
+Ryan is taking this on.
+
+## Methods
+
+### In-season Estimates
+Mike is handling this part.
+
+### Run-Timing
+Ryan is taking this on.

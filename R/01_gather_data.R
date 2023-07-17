@@ -41,6 +41,14 @@ sfsr_sy23_tags = compress_obs %>%
   distinct(tag_code) %>%
   pull()
 
+# write tag list
+write.table(sfsr_sy23_tags,
+            here("data/sfsr_sy23_tags.txt"),
+            quote = F,
+            row.names = F,
+            col.names = F,
+            sep = "\t")
+
 # compressed observations for tags observed in SFSR
 sfsr_sy23_obs = compress_obs %>%
   filter(tag_code %in% sfsr_sy23_tags)

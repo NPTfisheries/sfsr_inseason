@@ -43,6 +43,11 @@ opts_chunk$set(echo = FALSE, message = FALSE, error = FALSE,
 options(knitr.kable.NA = '-')
 ```
 
+```{r load-data}
+load('../data/sfsr_obs.rda') 
+```
+
+
 ## Background
 
 Provide problem statement and why this work is necessary.

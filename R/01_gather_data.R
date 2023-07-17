@@ -28,9 +28,10 @@ dart_obs <- dart_obs_ls %>%
   map_dfr(. %>% pluck("dart_obs") %>% mutate(trans_status = as.character(trans_status)), .id = 'spawn_year')
 
 mark_data <- dart_obs %>%
-  filter(event_type_name == 'Mark') %>%
+  #filter(event_type_name == 'Mark') %>% wasn't getting every tag for some reason
   select(tag_code, file_id, contains('mark_'), contains('event_'), contains('rel_'), flags) %>%
-  select(-event_type_name)
+  select(-event_type_name) %>%
+  distinct(tag_code, .keep_all = TRUE)
 
 compress_obs <- dart_obs_ls %>%
   map_dfr(. %>% pluck("compress_obs"), .id = 'spawn_year') %>%
@@ -42,8 +43,7 @@ sfsr_tags <- compress_obs %>%
   pull()
 
 sfsr_obs <- compress_obs %>%
-  filter(tag_code %in% sfsr_tags) %>%
-  left_join(mark_data)
+  filter(tag_code %in% sfsr_tags)
 
 save(dart_obs_ls,
      file = "data/dart_obs_ls.rda")

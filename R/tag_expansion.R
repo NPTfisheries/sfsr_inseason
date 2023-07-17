@@ -24,7 +24,7 @@ tag_summ = sfsr_sy23_obs %>%
          rel_date,
          flags) %>%
   mutate(rel_year = year(rel_date)) %>%
-  filter(site_code %in% c("SFG", "KRS")) %>%
+  filter(site_code %in% c("SFG", "KRS", "SALSFW", "STR")) %>%
   group_by(mark_site,
            rel_site,
            mark_rear_type_name,
@@ -38,6 +38,7 @@ tag_summ = sfsr_sy23_obs %>%
     rel_site == "KNOXB" & str_detect(flags, "AD") ~ "McCall - Segregated",
     rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "LGR - NOR",
     rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "Unknown",
+    TRUE ~ NA
   ))
 
 exp_tbl = tibble(

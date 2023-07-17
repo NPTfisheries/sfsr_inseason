@@ -48,8 +48,8 @@ sfsr_tags = compress_obs %>%
   distinct(tag_code) %>%
   pull()
 
-sfsr_sy23_tags <- sfsr_tags %>%
-  filter(spawn_year == 2023)
+sfsr_obs <- compress_obs %>%
+  filter(tag_code %in% sfsr_tags)
 
 # # write tag list
 # write.table(sfsr_sy23_tags,
@@ -60,11 +60,9 @@ sfsr_sy23_tags <- sfsr_tags %>%
 #             sep = "\t")
 
 # compressed observations for tags observed in SFSR
-sfsr_obs <- compress_obs %>%
-  filter(tag_code %in% sfsr_tags)
 
-sfsr_sy23_obs = compress_obs %>%
-  filter(tag_code %in% sfsr_sy23_tags)
+sfsr_sy23_obs = sfsr_obs %>%
+  filter(spawn_year == 2023)
 
 # write out objects for analysis
 save(dart_obs_ls,

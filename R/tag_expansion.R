@@ -31,7 +31,7 @@ tag_summ = sfsr_sy23_obs %>%
            rel_year,
            flags,
            site_code) %>%
-  count() %>%
+  summarise(n = n_distinct(tag_code) %>% #count() %>%
   filter(rel_site %in% c("LGRLDR", "KNOXB")) %>%
   mutate(rel_group = case_when(
     rel_site == "KNOXB" & str_detect(flags, "AI") ~ "McCall - Integrated",
@@ -63,7 +63,11 @@ tag_exp <- left_join(tag_summ,
   mutate(est = n*tag_expansion)
 
 exp_summ <- tag_exp %>%
+  filter(!is.na(rel_group)) %>%
   group_by(site_code, rel_group) %>%
-  summarise(tot_est = sum(est, na.rm=TRUE))
+  summarise(n_tags = sum(n, na.rm=TRUE),
+            tot_est = sum(est, na.rm=TRUE))
+
+save(exp_summ, file = './data/expansion.rda')
 
 # END SCRIPT

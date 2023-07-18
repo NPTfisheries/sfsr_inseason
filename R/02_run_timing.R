@@ -16,10 +16,9 @@ sfsr_fish <- sfsr_obs %>%
   mutate(julian = lubridate::mdy(paste0(format(min_det, format = '%m-%d'), '-2020'))) %>%
   mutate(group = case_when(
     mark_site == 'MCCA' & grepl('AD', flags) ~ 'Segregated',
-    mark_site == 'MCCA' & grepl('CW', flags) ~ 'Integregated',
-    mark_site == 'MCCA' & grepl('AI', flags) ~ 'Integregated',
+    mark_site == 'MCCA' & grepl('CW||AI', flags) ~ 'Integregated',
     mark_site == 'LGRLDR' & mark_rear_type_name != 'H' ~ 'Natural',
-    TRUE ~ 'other'
+    TRUE ~ NA
   ))
   
 obs <- sfsr_fish %>%
@@ -28,48 +27,75 @@ obs <- sfsr_fish %>%
   group_by(site_code, tag_code) %>%
   slice_min(min_det)
 
-obs %>%
-  filter(site_code == 'KRS') %>%
-  group_by(as.character(ju))
-  ggplot(aes(x = ))
-
-
 # check run-timing by group - not a big difference
-obs %>%
-  filter(site_code == "KRS") %>%
-  ggplot(aes(x = julian, color = spawn_year)) +
-  stat_ecdf() #+
-  #facet_grid(spawn_year~site_code)
-
-
 obs_sum <- obs %>%
+  group_by(site_code, spawn_year, julian) %>%
+  summarise(n = n()) %>%
+  group_by(site_code, spawn_year) %>%
+  mutate(csum = cumsum(n),
+         cdf = csum/sum(n)) %>%
+  ungroup()
+
+avg_run <- obs_sum %>%
+  filter(spawn_year != 2023) %>%
+  group_by(site_code, julian) %>%
+  summarise(cdf = mean(cdf))
+  
+fig_run <- ggplot(data = NULL, aes(x = julian, y = cdf)) +
+    geom_line(data = obs_sum %>% filter(spawn_year != 2023), aes(group = spawn_year), colour = 'grey') +
+    geom_line(data = avg_run, colour = 'navy') +
+    scale_x_date(date_breaks = '2 weeks', date_labels = "%b-%d") +
+    facet_wrap(~fct_rev(site_code), ncol = 1) +
+  theme_bw() +
+  labs(x = 'Date',
+       y = 'CDF')
+       # subtitle = 'Run-timing of SFSR hatchery (segregated and integrated) and natural origin returns across PIT-arrays. The grey lines indicate individual spawn year returns for \n 2010-2022, and the dark blue line shows the average cumulative proportion of returns for each day. ')
+
+ggsave('./figures/run_timing.png', fig_run, width = 7, height = 5)
+
+obs_run <- obs %>%
   #filter(spawn_year != 2023) %>%
   group_by(site_code, spawn_year) %>%
   summarise(n_tags = n_distinct(tag_code),
-            q01 = quantile(julian, probs = .01, type = 1),
-            q10 = quantile(julian, probs = .1, type = 1),
-            q25 = quantile(julian, probs = .25, type = 1),            
-            q50 = quantile(julian, probs = .5, type = 1),
-            q75 = quantile(julian, probs = .75, type = 1),          
-            q90 = quantile(julian, probs = .9, type = 1),
-            q99 = quantile(julian, probs = .99, type = 1)) %>%
-  pivot_longer(contains('q'), names_to = 'percentile', values_to = 'date') %>%
+            p01 = quantile(julian, probs = .01, type = 1),
+            p10 = quantile(julian, probs = .1, type = 1),
+            p25 = quantile(julian, probs = .25, type = 1),            
+            p50 = quantile(julian, probs = .5, type = 1),
+            p75 = quantile(julian, probs = .75, type = 1),          
+            p90 = quantile(julian, probs = .9, type = 1),
+            p99 = quantile(julian, probs = .99, type = 1)) %>%
+  pivot_longer(p01:p99, names_to = 'percentile', values_to = 'date') %>%
   mutate(julian = yday(date)) %>%
   ungroup()
 
 
-obs_sum %>%
-  ggplot(aes(x = spawn_year, y = date)) +
+# Figure out the missed period with AR model
+
+obs_23 <- obs %>%
+  filter(spawn_year == 2023) %>%
+  group_by(site_code, group, julian) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  complete(site_code, group, julian) %>%
+  group_by(site_code, group) %>%
+  mutate(tmp = zoo::na.approx(n))
+
+obs_23 %>%
+  ggplot(aes(x = julian, y = n)) +
   geom_point() +
-  coord_flip() +
-  facet_grid(percentile~site_code)
+  geom_smooth() +
+  facet_grid(group~fct_rev(site_code)) +
+  theme_bw() +
+  labs(x = 'Date',
+       y = 'Daily Count')
+  
+obs_23
 
-tmp <- obs_sum %>%
-  group_by(site_code, percentile) %>%
-  summarise(mu = julian,
-            stdev = sd(julian))
-
-
+obs_ts <- ts(obs_23$n[obs_23$site_code == 'KRS'])
+int_ts <- zoo::na.approx(obs_ts)
+plot(int_ts)
+plot(diff(int_ts))
+acf(diff(int_ts)) #no autocorrelation
 
 
 

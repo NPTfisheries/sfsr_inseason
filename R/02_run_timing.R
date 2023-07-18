@@ -31,6 +31,8 @@ obs <- sfsr_fish %>%
 obs_sum <- obs %>%
   group_by(site_code, spawn_year, julian) %>%
   summarise(n = n()) %>%
+  ungroup() %>%
+  complete(site_code, spawn_year, julian, fill = list(n=0)) %>%
   group_by(site_code, spawn_year) %>%
   mutate(csum = cumsum(n),
          cdf = csum/sum(n)) %>%
@@ -44,6 +46,7 @@ avg_run <- obs_sum %>%
 fig_run <- ggplot(data = NULL, aes(x = julian, y = cdf)) +
     geom_line(data = obs_sum %>% filter(spawn_year != 2023), aes(group = spawn_year), colour = 'grey') +
     geom_line(data = avg_run, colour = 'navy') +
+    geom_line(data = obs_sum %>% filter(spawn_year == 2023), colour = 'limegreen') +
     scale_x_date(date_breaks = '2 weeks', date_labels = "%b-%d") +
     facet_wrap(~fct_rev(site_code), ncol = 1) +
   theme_bw() +
@@ -51,7 +54,8 @@ fig_run <- ggplot(data = NULL, aes(x = julian, y = cdf)) +
        y = 'CDF')
        # subtitle = 'Run-timing of SFSR hatchery (segregated and integrated) and natural origin returns across PIT-arrays. The grey lines indicate individual spawn year returns for \n 2010-2022, and the dark blue line shows the average cumulative proportion of returns for each day. ')
 
-ggsave('./figures/run_timing.png', fig_run, width = 7, height = 5)
+fig_run
+ggsave('./figures/run_timing.png', fig_run, width = 5, height = 5)
 
 obs_run <- obs %>%
   #filter(spawn_year != 2023) %>%

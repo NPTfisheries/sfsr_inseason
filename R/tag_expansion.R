@@ -8,9 +8,11 @@
 
 # load necessary libraries
 library(tidyverse)
+library(here)
 
 # load data
 load("data/sfsr_sy23_obs.rda")
+idfg_tag_exp = read_csv(file = here("data/idfg_tag_expansions.csv"))
 
 #---------------------------------
 # summarize tags by release group, release year, and site code (KRS and SFG)
@@ -28,10 +30,14 @@ tag_df = sfsr_sy23_obs %>%
   mutate(rel_year = year(rel_date)) %>%
   # no observations at "SALFSW" or "STR". Perhaps not uploaded, yet?
   filter(site_code %in% c("SFG", "KRS", "SALSFW", "STR")) %>%
+  left_join(idfg_tag_exp %>%
+              select(Tag, Expansion), 
+            by = c("tag_code" = "Tag")) %>%
   group_by(mark_site,
            rel_site,
            mark_rear_type_name,
            rel_year,
+           Expansion,
            flags,
            site_code) %>%
   summarise(n = n_distinct(tag_code),
@@ -47,7 +53,8 @@ tag_df = sfsr_sy23_obs %>%
   )) %>%
   #ungroup() %>%
   group_by(rel_group, 
-           rel_year, 
+           rel_year,
+           Expansion,
            site_code) %>%
   summarise(n_tags = sum(n),
             .groups = "drop") %>%
@@ -55,28 +62,38 @@ tag_df = sfsr_sy23_obs %>%
           rel_year, 
           site_code)
 
-# create expansion table
-exp_tbl = tibble(
-  rel_group = c("McCall - Integrated", "McCall - Integrated", 
-                "McCall - Segregated", "McCall - Segregated",
-                "LGR - NOR"),
-  rel_year = c(2021, 2022,
-               2021, 2022,
-               2023),
-  tag_expansion = c(7, 8,
-                    67, 13,
-                    1/0.18))  
+# # create expansion table
+# exp_tbl = tibble(
+#   rel_group = c("McCall - Integrated", "McCall - Integrated", 
+#                 "McCall - Segregated", "McCall - Segregated",
+#                 "LGR - NOR"),
+#   rel_year = c(2021, 2022,
+#                2021, 2022,
+#                2023),
+#   tag_expansion = c(7, 8,
+#                     67, 13,
+#                     1/0.18))  
+
+tag_exp = tag_df %>%
+  rename(tag_expansion = Expansion) %>%
+  mutate(tag_expansion = case_when(
+    rel_group == "LGR - NOR" ~ 1 / 0.18,
+    TRUE ~ tag_expansion
+  )) %>%
+  mutate(est = round(n_tags * tag_expansion))
+  
 
 # expand n tags by expansion rate
-tag_exp = left_join(tag_df,
-                    exp_tbl) %>%
-  mutate(est = round(n_tags * tag_expansion))
+# tag_exp = left_join(tag_df,
+#                     exp_tbl) %>%
+#   mutate(est = round(n_tags * tag_expansion))
 
 # expansion summary
 exp_df = tag_exp %>%
   group_by(rel_group, site_code) %>%
   summarise(n_tags = sum(n_tags, na.rm = T),
-            n_tags_exp = sum(est, na.rm = T))
+            n_tags_exp = sum(est, na.rm = T),
+            .groups = "drop")
 
 #---------------------------------
 # calculate detection probabilities

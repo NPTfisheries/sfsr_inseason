@@ -44,9 +44,6 @@ opts_chunk$set(echo = FALSE, message = FALSE, error = FALSE,
 options(knitr.kable.NA = '-')
 ```
 
-```{r load-data}
-load('../data/expansion.rda') 
-```
 
 ## Summary 
 * Current PIT-tag expansions at the Krassel PIT-array (KRS; as of July 17th)^[Scripts to reproduce these summaries are available at "https://github.com/NPTfisheries/sf_salmon_harvest.com".]:
@@ -58,7 +55,7 @@ load('../data/expansion.rda')
   * NOR: (655 + 56)/.75 = 948
 * Current Lower Granite Estimate of McCall Integrated fish is 465.
   
-* *Total ad-intact fish at KRS: 1,413*
+* **Total ad-intact fish at KRS: 1,413**
   * 948 (NOR) + 465 (Integrated) = 1,413
   
 ## Assumptions
@@ -104,6 +101,24 @@ avg_run <- obs_sum %>%
   summarise(cdf = mean(cdf))
   
 
+```
+
+
+```{r load-data}
+load('../data/expansion.rda') 
+```
+
+
+```{r exp-table}
+kable(tag_exp %>%
+        select(site_code, rel_year, rel_group, SbyC, tag_expansion, n_tags, estimate = est) %>%
+        arrange(site_code, rel_year, rel_group))
+```
+
+```{r exp-table-sum}
+kable(exp_df %>%
+        select(site_code, rel_group, n_tags, estimate = n_tags_exp) %>%
+        arrange(site_code, rel_group))
 ```
 
 

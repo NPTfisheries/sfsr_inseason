@@ -31,12 +31,13 @@ tag_df = sfsr_sy23_obs %>%
   # no observations at "SALFSW" or "STR". Perhaps not uploaded, yet?
   filter(site_code %in% c("SFG", "KRS", "SALSFW", "STR")) %>%
   left_join(idfg_tag_exp %>%
-              select(Tag, Expansion), 
+              select(Tag, SbyC, Expansion), 
             by = c("tag_code" = "Tag")) %>%
   group_by(mark_site,
            rel_site,
            mark_rear_type_name,
            rel_year,
+           SbyC,
            Expansion,
            flags,
            site_code) %>%
@@ -54,6 +55,7 @@ tag_df = sfsr_sy23_obs %>%
   #ungroup() %>%
   group_by(rel_group, 
            rel_year,
+           SbyC,
            Expansion,
            site_code) %>%
   summarise(n_tags = sum(n),
@@ -94,6 +96,9 @@ exp_df = tag_exp %>%
   summarise(n_tags = sum(n_tags, na.rm = T),
             n_tags_exp = sum(est, na.rm = T),
             .groups = "drop")
+
+
+
 
 #---------------------------------
 # calculate detection probabilities
@@ -154,6 +159,6 @@ exp_df_2 = exp_df %>%
   mutate(tot_est = round(n_tags_exp / p, 0))
 
 # write to .rda
-save(exp_df_2, file = './data/expansion.rda')
+save(tag_exp, exp_df, exp_df_2, file = './data/expansion.rda')
 
 # END SCRIPT

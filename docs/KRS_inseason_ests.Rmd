@@ -47,21 +47,25 @@ options(knitr.kable.NA = '-')
 
 ## Summary 
 * Current PIT-tag expansions at the Krassel PIT-array (KRS; as of July 17th)^[Scripts to reproduce these summaries are available at "https://github.com/NPTfisheries/sf_salmon_harvest.com".]:
-  * 655 natural-origin fish estimated from 118 observed tags and 18% sampling/tagging rate
+  * 656 natural-origin fish estimated from 118 observed tags and 18% sampling/tagging rate (Tables 1 and 2)
+  * Using a 20% tagging rate the estimate is 590.
 * KRS was non-operational: 7/10, 7/11, 7/14, 7/15, and 7/16
   * Natural-origin PIT-tag passage during this period is estimated as $\le$ 10 tags for an additional 56 natural-origin fish.
 * The average passage date of $\ge$ 75% of the total return across KRS is July 15th (Figure \@ref(fig:run-timing)).
 * End of season natural-origin estimate: 948
-  * NOR: (655 + 56)/.75 = 948
+  * NOR: (656 + 56)/.75 = 949
 * Current Lower Granite Estimate of McCall Integrated fish is 465.
+  * Estimated at KRS after accounting for SbyC is 443 (95% conversion)
   
 * **Total ad-intact fish at KRS: 1,413**
-  * 948 (NOR) + 465 (Integrated) = 1,413
+  * 949 (NOR) + 465 (Integrated) = 1,414
   
 ## Assumptions
 * 100% conversion of integrated fish to KRS.
 * 100% detection efficiency at KRS
   * In 2021 and 2022 KRS detections efficiency was $\ge$ 95%.
+* Tagging rate at LGR of 18%.
+  * Only 4 out of 118 NOR tags were marked at LGR during the 29% sampling rate, all others marked at 18%.
 * Static interpolation rate of 2 tags during the missed period at KRS when observations are typically decreasing.
 
 ```{r process-data}
@@ -99,7 +103,6 @@ avg_run <- obs_sum %>%
   filter(spawn_year != 2023) %>%
   group_by(site_code, julian) %>%
   summarise(cdf = mean(cdf))
-  
 
 ```
 
@@ -110,15 +113,38 @@ load('../data/expansion.rda')
 
 
 ```{r exp-table}
-kable(tag_exp %>%
-        select(site_code, rel_year, rel_group, SbyC, tag_expansion, n_tags, estimate = est) %>%
-        arrange(site_code, rel_year, rel_group))
+library(flextable)
+
+tag_exp %>%
+  filter(site_code == 'KRS') %>%
+  mutate(rel_group = gsub('McCall - |LGR - ','',rel_group),
+         rel_year = as.character(rel_year)) %>%
+  select(rel_year, rel_group, SbyC, tag_expansion, n_tags, est) %>%
+  arrange(rel_year, rel_group) %>%
+  flextable() %>%
+  set_header_labels(rel_year = 'Release Year', rel_group = 'Group', SbyC = 'SbyC', tag_expansion = 'Expansion', n_tags = 'n_tags', est = 'Estimate') %>%
+  set_caption(
+    caption = 'Current tag expansion rates and estimates for SFSR release groups at KRS.',
+    style = "Table Caption",
+    autonum = officer::run_autonum(seq_id = "tab", bkm = "tab1")) %>%
+  theme_booktabs() %>%
+  set_table_properties(align = "center", layout = "fixed")
 ```
 
 ```{r exp-table-sum}
-kable(exp_df %>%
-        select(site_code, rel_group, n_tags, estimate = n_tags_exp) %>%
-        arrange(site_code, rel_group))
+exp_df %>%
+  filter(site_code == 'KRS') %>%
+  mutate(rel_group = gsub('McCall - |LGR - ','',rel_group)) %>%
+  select(rel_group, n_tags, estimate = n_tags_exp) %>%
+  arrange(rel_group) %>%
+  flextable() %>%
+  set_header_labels(rel_group = 'Group', n_tags = 'n_tags', estimate = 'Estimate') %>%
+  set_caption(
+    caption = 'Current SFSR release group estimates at KRS.',
+    style = "Table Caption",
+    autonum = officer::run_autonum(seq_id = "tab", bkm = "tab1")) %>%
+  theme_booktabs() %>%
+  set_table_properties(align = "center", layout = "fixed")
 ```
 
 

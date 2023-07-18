@@ -15,6 +15,17 @@ load("data/sfsr_sy23_obs.rda")
 idfg_tag_exp = read_csv(file = here("data/idfg_tag_expansions.csv"))
 
 #---------------------------------
+lgrldr <- sfsr_sy23_obs %>%
+  filter(mark_site == 'LGRLDR',
+         rel_site == 'LGRLDR',
+         site_code == 'KRS',
+         mark_rear_type_name == 'W') %>%
+  distinct(tag_code, .keep_all = TRUE)
+
+lgrldr %>%
+  ggplot(aes(x=mark_date)) +
+  geom_histogram()
+
 # summarize tags by release group, release year, and site code (KRS and SFG)
 tag_df = sfsr_sy23_obs %>%
   select(tag_code,

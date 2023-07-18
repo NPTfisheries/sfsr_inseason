@@ -45,17 +45,25 @@ exp_tbl = tibble(
   rel_group = c("McCall - Integrated", 
                 "McCall - Integrated", 
                 "McCall - Segregated",
-                "McCall - Segragated",
+                "McCall - Segregated",
                 "LGR - NOR"),
   rel_year = c(2021,
                2022,
                2021,
                2022,
-               NA),
-  tag_expansion = c(73,
-                    17,
+               2023),
+  tag_expansion = c(7,
+                    8,
                     67,
                     13,
                     1/0.18))  
+
+tag_exp <- left_join(tag_summ,
+                      exp_tbl) %>%
+  mutate(est = n*tag_expansion)
+
+exp_summ <- tag_exp %>%
+  group_by(site_code, rel_group) %>%
+  summarise(tot_est = sum(est, na.rm=TRUE))
 
 # END SCRIPT

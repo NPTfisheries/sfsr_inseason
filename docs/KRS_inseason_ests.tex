@@ -200,8 +200,11 @@
 \setlength{\TPVertModule}{1cm}
 
 \pretitle{%
-
-\vspace*{-1cm}
+%
+\begin{textblock}{4}(2,0.8)\includegraphics[height=2.0cm]{NPT.png}\end{textblock}%
+\begin{textblock}{4}(17,0.8)\includegraphics[height=2.0cm]{DFRM.png}\end{textblock}%
+%\begin{textblock}{4}(16.5,0.8)\includegraphics[trim=53 0 0 0, clip=true,height=1.5cm]{NPT.png}\end{textblock}%
+\vspace*{-1.0cm}%-0.6
 
 \LARGE\bfseries}
 \posttitle{\vspace*{0.3cm}\par}
@@ -234,8 +237,7 @@
 \begin{document}
 
 
-  \vspace*{-2cm}
-  
+  \vspace*{0cm}
   \definecolor{shadecolor}{RGB}{255,255,255} %210
   \begin{snugshade}%\sffamily
   \maketitle

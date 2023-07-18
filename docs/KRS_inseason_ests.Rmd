@@ -26,7 +26,7 @@ shorttitle: Ad-Intact Estimates
 geometry: margin=1in
 fontfamily: mathpazo
 fontsize: 11pt
-branding: no
+branding: yes
 bibliography:
 - references.bib
 link-citations: true

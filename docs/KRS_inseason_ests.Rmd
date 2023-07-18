@@ -15,7 +15,7 @@ output:
     keep_tex: yes
     fig_caption: yes
     latex_engine: pdflatex #xelatex
-    template: NPT_report_template2.tex
+    template: C:\ryank\Templates\NPT_report_template2.tex
   bookdown::html_document2:
     number_sections: no
     fig_caption: yes
@@ -36,6 +36,7 @@ csl: "american-fisheries-society.csl" # Insert path for the bib-style
 ```{r setup, include=FALSE}
 library(knitr)
 library(kableExtra)
+library(tidyverse)
 
 opts_chunk$set(echo = FALSE, message = FALSE, error = FALSE,
                       warning = FALSE)
@@ -56,8 +57,10 @@ load('../data/expansion.rda')
   * additional 70 integrated fish
   * additional 56 natural-origin
 * Ad-intact fish currently estimated above KRS: 1,341
-* The average passage date of $\ge$ 75% of the total return across KRS is July 15th (Figure 1).
-* End of season ad-intact estimate: 1,788
+* The average passage date of $\ge$ 75% of the total return across KRS is July 15th (Figure \@ref(fig:run-timing)).
+* End of season ad-intact total estimate: 1,788
+  * NOR: (655 + 56)/.75 = 948
+  * Integrated: (560 + 70)/.75 = 840
 
 ## Assumptions
 * 100% detection efficiency at KRS
@@ -65,6 +68,54 @@ load('../data/expansion.rda')
 * Integrated fish observed at KRS is approximately 100 fish higher than the estimate at LGR.
 * Integrated tag ratio of 7 is slighter higher than actual rate for each release group.
 
-```{r run-fig, fig.width=5, fig.height=5, fig.cap = "Run-timing of SFSR hatchery (segregated and integrated) and natural origin returns across PIT-arrays. The grey lines indicate individual spawn year returns for \n 2010-2022, and the dark blue line shows the average cumulative proportion of returns for each day."}
-include_graphics('../figures/run_timing.png')
+```{r process-data}
+load("../data/sfsr_obs.rda")
+
+sfsr_fish <- sfsr_obs %>%
+  filter(mark_site %in% c('LGRLDR', 'MCCA')) %>%
+  filter(rel_site %in% c('LGRLDR', 'KNOXB')) %>%
+  mutate(julian = lubridate::mdy(paste0(format(min_det, format = '%m-%d'), '-2020'))) %>%
+  mutate(group = case_when(
+    mark_site == 'MCCA' & grepl('AD', flags) ~ 'Segregated',
+    mark_site == 'MCCA' & grepl('CW||AI', flags) ~ 'Integregated',
+    mark_site == 'LGRLDR' & mark_rear_type_name != 'H' ~ 'Natural',
+    TRUE ~ NA
+  ))
+  
+obs <- sfsr_fish %>%
+  filter(group != 'other') %>%
+  filter(site_code %in% c('SFG', 'KRS')) %>%
+  group_by(site_code, tag_code) %>%
+  slice_min(min_det)
+
+# check run-timing by group - not a big difference
+obs_sum <- obs %>%
+  group_by(site_code, spawn_year, julian) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  complete(site_code, spawn_year, julian, fill = list(n=0)) %>%
+  group_by(site_code, spawn_year) %>%
+  mutate(csum = cumsum(n),
+         cdf = csum/sum(n)) %>%
+  ungroup()
+
+avg_run <- obs_sum %>%
+  filter(spawn_year != 2023) %>%
+  group_by(site_code, julian) %>%
+  summarise(cdf = mean(cdf))
+  
+
+```
+
+
+```{r run-timing, fig.width=6, fig.height=5, fig.cap = "Run-timing of SFSR hatchery (segregated and integrated) and natural origin returns across PIT-arrays. The grey lines indicate individual spawn year returns for 2010-2022, the dark blue line is the average cumulative proportion of returns across the same years, and the green line represents the current 2023 return."}
+ggplot(data = NULL, aes(x = julian, y = cdf)) +
+    geom_line(data = obs_sum %>% filter(spawn_year != 2023), aes(group = spawn_year), colour = 'grey') +
+    geom_line(data = avg_run, colour = 'navy') +
+    geom_line(data = obs_sum %>% filter(spawn_year == 2023), colour = 'limegreen') +
+    scale_x_date(date_breaks = '2 weeks', date_labels = "%b-%d") +
+    facet_wrap(~fct_rev(site_code), ncol = 1) +
+  theme_bw() +
+  labs(x = 'Date',
+       y = 'CDF')
 ```

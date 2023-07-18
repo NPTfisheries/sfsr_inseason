@@ -42,6 +42,15 @@
 \usepackage{longtable,booktabs}
 % Fix footnotes in tables (requires footnote package)
 \IfFileExists{footnote.sty}{\usepackage{footnote}\makesavenoteenv{long table}}{}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
 \IfFileExists{parskip.sty}{%
 \usepackage{parskip}
 }{% else
@@ -204,7 +213,7 @@
 \raggedbottom
 
 \usepackage[australian]{babel}
-\date{July 17, 2023}
+\date{July 18, 2023}
 
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -270,9 +279,17 @@
 \item
   Ad-intact fish currently estimated above KRS: 1,341
 \item
-  The average passage date of \(\ge\) 75\% of the total return across KRS is July 15th (Figure 1).
+  The average passage date of \(\ge\) 75\% of the total return across KRS is July 15th (Figure \ref{fig:run-timing}).
 \item
-  End of season ad-intact estimate: 1,788
+  End of season ad-intact total estimate: 1,788
+
+  \begin{itemize}
+  \tightlist
+  \item
+    NOR: (655 + 56)/.75 = 948
+  \item
+    Integrated: (560 + 70)/.75 = 840
+  \end{itemize}
 \end{itemize}
 
 \hypertarget{assumptions}{%
@@ -291,8 +308,9 @@
 \end{itemize}
 
 \begin{figure}
-\includegraphics[width=20.83in]{../figures/run_timing} \caption{Run-timing of SFSR hatchery (segregated and integrated) and natural origin returns across PIT-arrays. The grey lines indicate individual spawn year returns for 
- 2010-2022, and the dark blue line shows the average cumulative proportion of returns for each day.}\label{fig:run-fig}
+\centering
+\includegraphics{KRS_inseason_ests_files/figure-latex/run-timing-1.pdf}
+\caption{\label{fig:run-timing}Run-timing of SFSR hatchery (segregated and integrated) and natural origin returns across PIT-arrays. The grey lines indicate individual spawn year returns for 2010-2022, the dark blue line is the average cumulative proportion of returns across the same years, and the green line represents the current 2023 return.}
 \end{figure}
 
 \printbibliography

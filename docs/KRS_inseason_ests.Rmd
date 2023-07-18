@@ -1,5 +1,5 @@
 ---
-title: "In-season estimates of ad-intact fish returning to the Krassel PIT array"
+title: "In-season estimates of ad-intact fish returning to the Krassel PIT-array"
 author:
 - name: Mike Ackerman
   affiliation: Research Scientist
@@ -15,7 +15,7 @@ output:
     keep_tex: yes
     fig_caption: yes
     latex_engine: pdflatex #xelatex
-    template: C:\ryank\Templates\NPT_report_template2.tex
+    template: NPT_report_template2.tex
   bookdown::html_document2:
     number_sections: no
     fig_caption: yes
@@ -49,7 +49,7 @@ load('../data/expansion.rda')
 ```
 
 ## Summary 
-* Current PIT-tag expansions at KRS (as of July 17th):
+* Current PIT-tag expansions at the Krassel PIT-array (KRS; as of July 17th)^[Scripts to reproduce these summaries are available at "https://github.com/NPTfisheries/sf_salmon_harvest.com".]:
   * 655 natural-origin fish estimated from 118 observed tags
   * 560 integrated fish estimated from 80 tags with a ratio of approximately 7 fish/tag
 * KRS was non-operational: 7/10, 7/11, 7/14, 7/15, and 7/16
@@ -64,6 +64,7 @@ load('../data/expansion.rda')
 
 ## Assumptions
 * 100% detection efficiency at KRS
+  * In 2021 and 2022 KRS detections efficiency was $>$95%.
 * Static interpolation rate of 2 tags when observations are typically decreasing.
 * Integrated fish observed at KRS is approximately 100 fish higher than the estimate at LGR.
 * Integrated tag ratio of 7 is slighter higher than actual rate for each release group.

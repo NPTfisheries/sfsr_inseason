@@ -4,11 +4,12 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-# Modified:
+#   Modified: October 17, 2023
 
 # load necessary libraries
 library(tidyverse)
 library(PITcleanr)
+library(here)
 
 # load configuration
 load("data/config.rda")
@@ -22,33 +23,50 @@ dart_obs_ls <- map(.x = yrs,
                      compressDART(species = "Chinook",
                                   loc = "GRA",
                                   spawn_year = x,
-                                  configuration = config)
+                                  configuration = configuration)
     })
 
 # assign names to dfs
-names(dart_obs_ls) <- yrs
+names(dart_obs_ls) = yrs
 
-# Extract the named data frame from the list of lists
-dart_obs <- dart_obs_ls %>%
-  map_dfr(. %>% pluck("dart_obs") %>% mutate(trans_status = as.character(trans_status)), .id = 'spawn_year')
+# extract the named data frame from the list of lists
+dart_obs = dart_obs_ls %>%
+  map_dfr(. %>% 
+            pluck("dart_obs") %>% 
+            mutate(trans_status = as.character(trans_status)), .id = 'spawn_year')
 
-mark_data <- dart_obs %>%
+# extract mark data
+mark_data = dart_obs %>%
   #filter(event_type_name == 'Mark') %>% wasn't getting every tag for some reason
-  select(tag_code, file_id, contains('mark_'), contains('event_'), contains('rel_'), flags) %>%
+  select(tag_code, 
+         file_id, 
+         contains('mark_'), 
+         contains('event_'), 
+         contains('rel_'), 
+         flags) %>%
   select(-event_type_name) %>%
-  distinct(tag_code, .keep_all = TRUE)
+  distinct(tag_code, 
+           .keep_all = TRUE)
 
-compress_obs <- dart_obs_ls %>%
-  map_dfr(. %>% pluck("compress_obs"), .id = 'spawn_year') %>%
+# compile compressed obs, SY2010 - 2023
+compress_obs = dart_obs_ls %>%
+  map_dfr(. %>% 
+            pluck("compress_obs"), 
+          .id = 'spawn_year') %>%
   left_join(mark_data)
 
-# tags observed in SFSR in SY2023
+# trim down to just tags observed within the sfsr, all years
 sfsr_tags = compress_obs %>%
-  filter(node %in% c("SFG", "ESS", "ZEN", "KRS", "SALSFW", "STR")) %>%
+  filter(node %in% c("SFG", "ESS", "ZEN", "KRS", "STR", "SALSFW", "MCCA")) %>%
+  mutate(node = recode(node,
+                       MCCA = "STR",
+                       SALSFW = "STR")) %>%
   distinct(tag_code) %>%
   pull()
 
-sfsr_obs <- compress_obs %>%
+# now get all of the observations for those tags observed within the sfsr 
+# i.e., we don't just want the sfsr observations
+sfsr_obs = compress_obs %>%
   filter(tag_code %in% sfsr_tags)
 
 # # write tag list
@@ -59,8 +77,7 @@ sfsr_obs <- compress_obs %>%
 #             col.names = F,
 #             sep = "\t")
 
-# compressed observations for tags observed in SFSR
-
+# compressed observations for tags observed in SFSR, SY2023
 sfsr_sy23_obs = sfsr_obs %>%
   filter(spawn_year == 2023)
 

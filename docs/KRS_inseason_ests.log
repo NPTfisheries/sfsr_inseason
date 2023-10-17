@@ -1,11 +1,11 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.7.18)  18 JUL 2023 14:37
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.10.17)  17 OCT 2023 12:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **KRS_inseason_ests.tex
 (./KRS_inseason_ests.tex
 LaTeX2e <2023-06-01> patch level 1
-L3 programming layer <2023-06-30>
+L3 programming layer <2023-10-10>
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2023/05/17 v1.4n Standard LaTeX document class
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/base/size11.clo
@@ -410,7 +410,7 @@ Package: ifthen 2022/04/13 v1.1d Standard LaTeX ifthen package (DPC)
 \bibhang=\skip62
 \blx@bcfin=\read3
 \blx@bcfout=\write4
-\blx@langwohyphens=\language3
+\blx@langwohyphens=\language5
 \c@mincomprange=\count339
 \c@maxcomprange=\count340
 \c@mincompwidth=\count341
@@ -574,18 +574,18 @@ File: biblatex.cfg
 Package biblatex Info: Input encoding 'utf8' detected.
 Package biblatex Info: Document encoding is UTF8 ....
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/l3kernel/expl3.sty
-Package: expl3 2023-06-30 L3 programming layer (loader) 
+Package: expl3 2023-10-10 L3 programming layer (loader) 
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
-File: l3backend-pdftex.def 2023-04-19 L3 backend support: PDF output (pdfTeX)
+File: l3backend-pdftex.def 2023-10-10 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count421
 \l__pdf_internal_box=\box58
 ))
 Package biblatex Info: ... and expl3
-(biblatex)             2023-06-30 L3 programming layer (loader) 
+(biblatex)             2023-10-10 L3 programming layer (loader) 
 (biblatex)             is new enough (at least 2020/04/06),
 (biblatex)             setting 'casechanger=expl3'.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
-Package: xparse 2023-02-02 L3 Experimental document command parser
+Package: xparse 2023-10-10 L3 Experimental document command parser
 )
 Package: blx-case-expl3 2023/03/05 v3.19 expl3 case changing code for biblatex
 )) (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/tools/longtable.sty
@@ -648,9 +648,9 @@ File: pdftex.def 2022/09/22 v1.2b Graphics/color driver for pdftex
 Package: grffile 2019/11/11 v2.1 Extended file name support for graphics (legacy)
 Package grffile Info: This package is an empty stub for compatibility on input line 40.
 ) (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/caption/caption.sty
-Package: caption 2023/03/12 v3.6j Customizing captions (AR)
+Package: caption 2023/08/05 v3.6o Customizing captions (AR)
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/caption/caption3.sty
-Package: caption3 2023/03/12 v2.4 caption3 kernel (AR)
+Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
 \caption@tempdima=\dimen181
 \captionmargin=\dimen182
 \caption@leftmargin=\dimen183
@@ -790,10 +790,10 @@ Grid set 16 x 16 = 37.34424pt x 52.81541pt
 \TP@tbargs=\toks39
 TextBlockOrigin set to 0pt x 0pt
 ) (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/babel/babel.sty
-Package: babel 2023/07/15 v3.92 The Babel package
+Package: babel 2023/09/29 v3.95 The Babel package
 \babel@savecnt=\count437
 \U@D=\dimen273
-\l@unhyphenated=\language4
+\l@unhyphenated=\language6
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/generic/babel/txtbabel.def)
 \bbl@readstream=\read4
 \bbl@dirlevel=\count438
@@ -985,11 +985,7 @@ Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'babel' package.
 Package csquotes Info: Adjusting default style.
 Package csquotes Info: Redefining alias 'default' -> 'australian'.
-(./KRS_inseason_ests.aux
-
-LaTeX Warning: Label `tab:tab1' multiply defined.
-
-)
+(./KRS_inseason_ests.aux)
 \openout1 = `KRS_inseason_ests.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 242.
@@ -1088,8 +1084,8 @@ Package biblatex Info: Data encoding 'utf8' specified.
 \openout4 = `KRS_inseason_ests.bcf'.
 
 Package biblatex Info: Trying to load bibliographic data...
-Package biblatex Info: ... file 'KRS_inseason_ests.bbl' found.
-(./KRS_inseason_ests.bbl)
+Package biblatex Info: ... file 'KRS_inseason_ests.bbl' not found.
+No file KRS_inseason_ests.bbl.
 Package biblatex Info: Reference section=0 on input line 242.
 Package biblatex Info: Reference segment=0 on input line 242.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
@@ -1102,12 +1098,12 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: threeparttable package is loaded.
 Package caption Info: wrapfig package is loaded.
 Package caption Info: End \AtBeginDocument code.
-<NPT.png, id=11, 110.814pt x 108.405pt>
+<NPT.png, id=4, 110.814pt x 108.405pt>
 File: NPT.png Graphic file (type png)
 <use NPT.png>
 Package pdftex.def Info: NPT.png  used on input line 248.
 (pdftex.def)             Requested size: 58.16975pt x 56.9052pt.
-<DFRM.png, id=13, 102.6234pt x 102.6234pt>
+<DFRM.png, id=6, 102.6234pt x 102.6234pt>
 File: DFRM.png Graphic file (type png)
 <use DFRM.png>
 Package pdftex.def Info: DFRM.png  used on input line 248.
@@ -1116,114 +1112,130 @@ LaTeX Font Info:    Trying to load font information for T1+lmss on input line 26
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/t1lmss.fd
 File: t1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 265.
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 265.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 265.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 265.
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 265.
+LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 265.
+(Font)              <10.95> on input line 264.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 265.
+(Font)              <8> on input line 264.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 265.
-LaTeX Font Info:    Trying to load font information for OT1+zplm on input line 265.
+(Font)              <6> on input line 264.
+LaTeX Font Info:    Trying to load font information for OT1+zplm on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/psnfss/ot1zplm.fd
 File: ot1zplm.fd 2002/09/08 Fontinst v1.914 font definitions for OT1/zplm.
 )
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 11.40997pt on input line 265.
+(Font)              scaled to size 11.40997pt on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 8.33606pt on input line 265.
+(Font)              scaled to size 8.33606pt on input line 264.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 6.25204pt on input line 265.
+(Font)              scaled to size 6.25204pt on input line 264.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 11.40997pt on input line 265.
+(Font)              scaled to size 11.40997pt on input line 264.
 (c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 8.33606pt on input line 265.
+(Font)              scaled to size 8.33606pt on input line 264.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 6.25204pt on input line 265.
+(Font)              scaled to size 6.25204pt on input line 264.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 265.
+(Font)              <9> on input line 264.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 265.
+(Font)              <7> on input line 264.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 265.
+(Font)              <5> on input line 264.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 9.37807pt on input line 265.
+(Font)              scaled to size 9.37807pt on input line 264.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 7.29405pt on input line 265.
+(Font)              scaled to size 7.29405pt on input line 264.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 5.21004pt on input line 265.
+(Font)              scaled to size 5.21004pt on input line 264.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 9.37807pt on input line 265.
+(Font)              scaled to size 9.37807pt on input line 264.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 7.29405pt on input line 265.
+(Font)              scaled to size 7.29405pt on input line 264.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 5.21004pt on input line 265.
+(Font)              scaled to size 5.21004pt on input line 264.
+
+LaTeX Warning: Reference `fig:run-timing' on page 1 undefined on input line 282.
+
+
+Package hyperref Warning: The anchor of a bookmark and its parent's must not
+(hyperref)                be the same. Added a new anchor on input line 310.
+
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `lmss' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 [1
 
-{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc} <./NPT.png> <./DFRM.png>]
-<KRS_inseason_ests_files/figure-latex/run-timing-1.pdf, id=39, 433.62pt x 361.35pt>
+{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc} <./NPT.png> <./DFRM.png>] [2]
+<KRS_inseason_ests_files/figure-latex/run-timing-1.pdf, id=40, 433.62pt x 361.35pt>
 File: KRS_inseason_ests_files/figure-latex/run-timing-1.pdf Graphic file (type pdf)
 <use KRS_inseason_ests_files/figure-latex/run-timing-1.pdf>
-Package pdftex.def Info: KRS_inseason_ests_files/figure-latex/run-timing-1.pdf  used on input line 501.
+Package pdftex.def Info: KRS_inseason_ests_files/figure-latex/run-timing-1.pdf  used on input line 524.
 (pdftex.def)             Requested size: 433.61894pt x 361.34912pt.
 
-LaTeX Warning: Empty bibliography on input line 505.
+LaTeX Warning: Empty bibliography on input line 528.
 
-[2] [3 <./KRS_inseason_ests_files/figure-latex/run-timing-1.pdf>] (./KRS_inseason_ests.aux)
+[3 <./KRS_inseason_ests_files/figure-latex/run-timing-1.pdf>] (./KRS_inseason_ests.aux)
  ***********
 LaTeX2e <2023-06-01> patch level 1
 L3 programming layer <2020/03/25>
  ***********
 
-LaTeX Warning: There were multiply-defined labels.
+LaTeX Warning: There were undefined references.
 
-Package rerunfilecheck Info: File `KRS_inseason_ests.out' has not changed.
-(rerunfilecheck)             Checksum: 347C975D1DBA3D6F6798BBC785ABB1AA;174.
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `KRS_inseason_ests.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `KRS_inseason_ests.out':
+(rerunfilecheck)             Before: D41D8CD98F00B204E9800998ECF8427E;0
+(rerunfilecheck)             After:  8A5E2D030BDEA078911065784912FFF1;184.
 Package logreq Info: Writing requests to 'KRS_inseason_ests.run.xml'.
 \openout1 = `KRS_inseason_ests.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 26865 strings out of 477196
- 470723 string characters out of 5811767
- 1944238 words of memory out of 5000000
- 47270 multiletter control sequences out of 15000+600000
- 668874 words of font info for 185 fonts, out of 8000000 for 9000
+ 26884 strings out of 476463
+ 470997 string characters out of 5799821
+ 1953043 words of memory out of 5000000
+ 48009 multiletter control sequences out of 15000+600000
+ 675119 words of font info for 192 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,11n,81p,1014b,1725s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,11n,81p,1014b,1729s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbxi10.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr9.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss10.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmssbx10.pfb><c:/Users/mikea/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb>
-Output written on KRS_inseason_ests.pdf (3 pages, 382787 bytes).
+Output written on KRS_inseason_ests.pdf (3 pages, 383187 bytes).
 PDF statistics:
- 117 PDF objects out of 1000 (max. 8388607)
- 80 compressed objects within 1 object stream
- 10 named destinations out of 1000 (max. 500000)
- 61472 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 110 PDF objects out of 1000 (max. 8388607)
+ 73 compressed objects within 1 object stream
+ 11 named destinations out of 1000 (max. 500000)
+ 65552 words of extra memory for PDF output out of 74296 (max. 10000000)
 

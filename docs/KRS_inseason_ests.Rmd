@@ -38,35 +38,49 @@ library(knitr)
 library(kableExtra)
 library(tidyverse)
 
-opts_chunk$set(echo = FALSE, message = FALSE, error = FALSE,
-                      warning = FALSE)
+opts_chunk$set(echo = FALSE, 
+               message = FALSE, 
+               error = FALSE,
+               warning = FALSE)
 
 options(knitr.kable.NA = '-')
+
 ```
 
+# Summary
 
-## Summary 
-* Current PIT-tag expansions at the Krassel PIT-array (KRS; as of July 17th)^[Scripts to reproduce these summaries are available at "https://github.com/NPTfisheries/sf_salmon_harvest.com".]:
-  * 656 natural-origin fish estimated from 118 observed tags and 18% sampling/tagging rate (Tables 1 and 2)
-  * Using a 20% tagging rate the estimate is 590.
-* KRS was non-operational: 7/10, 7/11, 7/14, 7/15, and 7/16
-  * Natural-origin PIT-tag passage during this period is estimated as $\le$ 10 tags for an additional 56 natural-origin fish.
-* The average passage date of $\ge$ 75% of the total return across KRS is July 15th (Figure \@ref(fig:run-timing)).
-* End of season natural-origin estimate: 948
-  * NOR: (656 + 56)/.75 = 949
-* Current Lower Granite Estimate of McCall Integrated fish is 465.
-  * Estimated at KRS after accounting for SbyC is 443 (95% conversion)
+## July 17, 2023
+
+  * *The estimated total ad-intact fish at KRS was 1,141 (949 NOR + 465 Integrated)*
+  * Natural-origin
+    * 656 natural-origin fish were estimated based on 118 observed tags and a 18% sample/tag rate at Lower Granite Dam.
+    * KRS was non-operational: July 10-11 and July 14-16. Estimated natural-origin PIT-tags passing KRS during the non-operational period was estimated as $\le$ 10 tags for an additional 56 natural-origin fish.
+    * The average passage date of $\ge$ 75% of the total return across KRS is July 15th (Figure \@ref(fig:run-timing)).
+    * End of season natural-origin estimate predicted as 949.
+    * NOR: (656 + 56)/0.75 = 949.
+  * Integrated
+    * Estimated 465 McCall Integrated fish at Lower Granite Dam.
+    * Estimated 443 at KRS after accounting for SbyC (i.e., 95% conversion).
   
-* **Total ad-intact fish at KRS: 1,413**
-  * 949 (NOR) + 465 (Integrated) = 1,414
-  
-## Assumptions
-* 100% conversion of integrated fish to KRS.
-* 100% detection efficiency at KRS
-  * In 2021 and 2022 KRS detections efficiency was $\ge$ 95%.
-* Tagging rate at LGR of 18%.
-  * Only 4 out of 118 NOR tags were marked at LGR during the 29% sampling rate, all others marked at 18%.
-* Static interpolation rate of 2 tags during the missed period at KRS when observations are typically decreasing.
+## October 18, 2023
+
+  * *Current estimated total ad-intact fish at KRS was 1,439 (912 NOR + 527 Integrated)*^[Scripts to reproduce these summaries are available at: "https://github.com/NPTfisheries/sf_salmon_harvest.com".]
+  * Natural-origin
+    * 856 natural-origin fish estimated based on 154 observed tags and a 18% sample/tag rate at Lower Granite Dam.
+    * Assume 100% passage past KRS.
+    * End of season natural-origin fish estimated as 856.
+    * NOR: (856 + 56)/1.00 - 912.
+  * Integrated
+    * Estimate 527 McCall Integrated fish at KRS based on 108 tags observed and "group-specific" expansion rates (Tables 1 and 2)
+
+# Assumptions
+
+  * 100% conversion of integrated fish to KRS.
+  * 100% detection efficiency at KRS
+    * In 2021 and 2022 KRS detections efficiency was $\ge$ 95%.
+  * Tagging rate at LGR of 18%.
+    * Only 4 out of 118 NOR tags were marked at LGR during the 29% sampling rate, all others marked at 18%.
+  * Static interpolation rate of 2 tags during the missed period at KRS when observations are typically decreasing.
 
 ```{r process-data}
 load("../data/sfsr_obs.rda")
@@ -84,39 +98,38 @@ sfsr_fish <- sfsr_obs %>%
   
 obs <- sfsr_fish %>%
   filter(group != 'other') %>%
-  filter(site_code %in% c('SFG', 'KRS')) %>%
-  group_by(site_code, tag_code) %>%
+  filter(node %in% c('SFG', 'KRS')) %>%
+  group_by(node, tag_code) %>%
   slice_min(min_det)
 
 # check run-timing by group - not a big difference
 obs_sum <- obs %>%
-  group_by(site_code, spawn_year, julian) %>%
+  group_by(node, spawn_year, julian) %>%
   summarise(n = n()) %>%
   ungroup() %>%
-  complete(site_code, spawn_year, julian, fill = list(n=0)) %>%
-  group_by(site_code, spawn_year) %>%
+  complete(node, spawn_year, julian, fill = list(n=0)) %>%
+  group_by(node, spawn_year) %>%
   mutate(csum = cumsum(n),
          cdf = csum/sum(n)) %>%
   ungroup()
 
 avg_run <- obs_sum %>%
   filter(spawn_year != 2023) %>%
-  group_by(site_code, julian) %>%
+  group_by(node, julian) %>%
   summarise(cdf = mean(cdf))
 
 ```
 
-
 ```{r load-data}
-load('../data/expansion.rda') 
-```
+load('../data/expansion.rda')
 
+```
 
 ```{r exp-table}
 library(flextable)
 
 tag_exp %>%
-  filter(site_code == 'KRS') %>%
+  filter(node == 'KRS') %>%
   mutate(rel_group = gsub('McCall - |LGR - ','',rel_group),
          rel_year = as.character(rel_year)) %>%
   select(rel_year, rel_group, SbyC, tag_expansion, n_tags, est) %>%
@@ -129,11 +142,12 @@ tag_exp %>%
     autonum = officer::run_autonum(seq_id = "tab", bkm = "tab1")) %>%
   theme_booktabs() %>%
   set_table_properties(align = "center", layout = "fixed")
+
 ```
 
 ```{r exp-table-sum}
 exp_df %>%
-  filter(site_code == 'KRS') %>%
+  filter(node == 'KRS') %>%
   mutate(rel_group = gsub('McCall - |LGR - ','',rel_group)) %>%
   select(rel_group, n_tags, estimate = n_tags_exp) %>%
   arrange(rel_group) %>%
@@ -145,6 +159,7 @@ exp_df %>%
     autonum = officer::run_autonum(seq_id = "tab", bkm = "tab1")) %>%
   theme_booktabs() %>%
   set_table_properties(align = "center", layout = "fixed")
+
 ```
 
 
@@ -154,8 +169,9 @@ ggplot(data = NULL, aes(x = julian, y = cdf)) +
     geom_line(data = avg_run, colour = 'navy') +
     geom_line(data = obs_sum %>% filter(spawn_year == 2023), colour = 'limegreen') +
     scale_x_date(date_breaks = '2 weeks', date_labels = "%b-%d") +
-    facet_wrap(~fct_rev(site_code), ncol = 1) +
+    facet_wrap(~fct_rev(node), ncol = 1) +
   theme_bw() +
   labs(x = 'Date',
        y = 'CDF')
+
 ```

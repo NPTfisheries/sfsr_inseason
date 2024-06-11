@@ -3,15 +3,15 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: October 17, 2023
+#   Modified: June 11, 2024
 
 # load necessary libaries
 library(tidyverse)
 
 # load tags observed in SFSR, all years
-load("data/sfsr_obs.rda")
+load("data/sfsr_obs_20240611.rda")
 
-sfsr_fish <- sfsr_obs %>%
+sfsr_fish = sfsr_obs %>%
   filter(mark_site %in% c('LGRLDR', 'MCCA')) %>%
   filter(rel_site %in% c('LGRLDR', 'KNOXB')) %>%
   mutate(julian = lubridate::mdy(paste0(format(min_det, format = '%m-%d'), '-2020'))) %>%
@@ -22,14 +22,14 @@ sfsr_fish <- sfsr_obs %>%
     TRUE ~ NA
   ))
   
-obs <- sfsr_fish %>%
+obs = sfsr_fish %>%
   filter(group != 'other') %>%
   filter(node %in% c('SFG', 'KRS')) %>%
   group_by(node, tag_code) %>%
   slice_min(min_det)
 
 # check run-timing by group - not a big difference
-obs_sum <- obs %>%
+obs_sum = obs %>%
   group_by(node, spawn_year, julian) %>%
   summarise(n = n()) %>%
   ungroup() %>%
@@ -39,12 +39,12 @@ obs_sum <- obs %>%
          cdf = csum/sum(n)) %>%
   ungroup()
 
-avg_run <- obs_sum %>%
+avg_run = obs_sum %>%
   filter(spawn_year != 2023) %>%
   group_by(node, julian) %>%
   summarise(cdf = mean(cdf))
   
-fig_run <- ggplot(data = NULL, aes(x = julian, y = cdf)) +
+fig_run = ggplot(data = NULL, aes(x = julian, y = cdf)) +
     geom_line(data = obs_sum %>% filter(spawn_year != 2023), aes(group = spawn_year), colour = 'grey') +
     geom_line(data = avg_run, colour = 'navy') +
     geom_line(data = obs_sum %>% filter(spawn_year == 2023), colour = 'limegreen') +
@@ -58,7 +58,7 @@ fig_run <- ggplot(data = NULL, aes(x = julian, y = cdf)) +
 fig_run
 ggsave(here("/figures/run_timing.png"), fig_run, width = 5, height = 5)
 
-obs_run <- obs %>%
+obs_run = obs %>%
   #filter(spawn_year != 2023) %>%
   group_by(node, spawn_year) %>%
   summarise(n_tags = n_distinct(tag_code),
@@ -75,7 +75,7 @@ obs_run <- obs %>%
 
 
 # Figure out the missed period with AR model
-obs_23 <- obs %>%
+obs_23 = obs %>%
   filter(spawn_year == 2023) %>%
   group_by(node, group, julian) %>%
   summarise(n = n()) %>%
@@ -95,8 +95,8 @@ obs_23 %>%
   
 obs_23
 
-obs_ts <- ts(obs_23$n[obs_23$node == 'KRS'])
-int_ts <- zoo::na.approx(obs_ts)
+obs_ts = ts(obs_23$n[obs_23$node == 'KRS'])
+int_ts = zoo::na.approx(obs_ts)
 plot(int_ts)
 plot(diff(int_ts))
 acf(diff(int_ts)) #no autocorrelation

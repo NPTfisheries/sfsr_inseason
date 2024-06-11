@@ -11,24 +11,41 @@ library(tidyverse)
 library(here)
 
 # load data
-load(here("data/sfsr_sy23_obs.rda"))
+load(here("data/sfsr_obs_20240611.rda"))
 idfg_tag_exp = read_csv(file = here("data/idfg_tag_expansions.csv"))
 
-#---------------------------------
-lgrldr <- sfsr_sy23_obs %>%
-  filter(mark_site == 'LGRLDR',
-         rel_site == 'LGRLDR',
-         node == 'KRS',
-         mark_rear_type_name == 'W') %>%
+# recode some nodes in sfsr_obs 
+sfsr_obs = sfsr_obs %>%
+  mutate(node = case_when(
+    node %in% c("ESSA0", "ESSB0") ~ "ESS",
+    node %in% c("ZENA0", "ZENBO") ~ "ZEN",
+    node %in% c("KRSA0", "KRSB0") ~ "KRS",
+    TRUE ~ node
+  ))
+
+# set some parameters
+yr = 2023
+
+# filter to year of interest
+sfsr_obs_yr = sfsr_obs %>%
+  filter(spawn_year == yr)
+
+# newly tagged fish observed at KRS
+lgrldr = sfsr_obs_yr %>%
+  filter(mark_site == "LGRLDR",
+         rel_site == "LGRLDR",
+         node == "KRS",
+         mark_rear_type_name == "W") %>%
   distinct(tag_code, 
            .keep_all = TRUE)
 
+# histogram of mark dates for fish observed at KRS
 lgrldr %>%
   ggplot(aes(x=mark_date)) +
   geom_histogram()
 
-# summarize tags by release group, release year, and site code (KRS and SFG)
-tag_df = sfsr_sy23_obs %>%
+# summarize tags by release group, release year, and site code (node)
+tag_df = sfsr_obs_yr %>%
   select(tag_code,
          node,
          event_date_time_value,
@@ -94,7 +111,6 @@ tag_exp = tag_df %>%
   )) %>%
   mutate(est = round(n_tags * tag_expansion))
   
-
 # expand n tags by expansion rate
 # tag_exp = left_join(tag_df,
 #                     exp_tbl) %>%
@@ -111,7 +127,7 @@ exp_df = tag_exp %>%
 # calculate detection probabilities
 
 # load data
-load("data/sfsr_obs.rda")
+#load("data/sfsr_obs.rda")
 
 # nodes of interest for det probs
 sf_nodes = c("SFG", "KRS", "SALSFW", "STR")

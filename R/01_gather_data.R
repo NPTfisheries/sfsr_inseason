@@ -4,10 +4,11 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: October 17, 2023
+#   Modified: June 11, 2024
 
 # load necessary libraries
 library(tidyverse)
+remotes::install_github("mackerman44/PITcleanr", ref = "npt_dev")
 library(PITcleanr)
 library(here)
 
@@ -15,7 +16,7 @@ library(here)
 load("data/config.rda")
 
 # which spawn years to query
-yrs <- 2010:2023
+yrs <- 2010:2024
 
 # create list of DART observations, by spawn year, compressed
 dart_obs_ls <- map(.x = yrs,
@@ -23,7 +24,7 @@ dart_obs_ls <- map(.x = yrs,
                      compressDART(species = "Chinook",
                                   loc = "GRA",
                                   spawn_year = x,
-                                  configuration = configuration)
+                                  configuration = config)
     })
 
 # assign names to dfs
@@ -77,16 +78,27 @@ sfsr_obs = compress_obs %>%
 #             col.names = F,
 #             sep = "\t")
 
-# compressed observations for tags observed in SFSR, SY2023
+# compressed observations for tags observed in SFSR, SY2024
 sfsr_sy23_obs = sfsr_obs %>%
   filter(spawn_year == 2023)
 
+# compressed observations for tags observed in SFSR, SY2024
+sfsr_sy24_obs = sfsr_obs %>%
+  filter(spawn_year == 2024)
+
 # write out objects for analysis
 save(dart_obs_ls,
-     file = "data/dart_obs_ls.rda")
+     sfsr_sy24_obs,
+     sfsr_obs,
+     file = "data/sfsr_obs_20240611.rda")
 
-save(sfsr_sy23_obs,
-     file = "data/sfsr_sy23_obs.rda")
+# END SCRIPT
 
-save(sfsr_obs,
-     file = "data/sfsr_obs.rda")
+# save(dart_obs_ls,
+#      file = "data/dart_obs_ls.rda")
+# 
+# save(sfsr_sy23_obs,
+#      file = "data/sfsr_sy23_obs.rda")
+# 
+# save(sfsr_obs,
+#      file = "data/sfsr_obs.rda")

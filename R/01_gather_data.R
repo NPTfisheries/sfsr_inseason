@@ -79,26 +79,16 @@ sfsr_obs = compress_obs %>%
 #             sep = "\t")
 
 # compressed observations for tags observed in SFSR, SY2024
-sfsr_sy23_obs = sfsr_obs %>%
-  filter(spawn_year == 2023)
+# sfsr_sy23_obs = sfsr_obs %>%
+#   filter(spawn_year == 2023)
 
 # compressed observations for tags observed in SFSR, SY2024
-sfsr_sy24_obs = sfsr_obs %>%
-  filter(spawn_year == 2024)
+# sfsr_sy24_obs = sfsr_obs %>%
+#   filter(spawn_year == 2024)
 
 # write out objects for analysis
 save(dart_obs_ls,
-     sfsr_sy24_obs,
      sfsr_obs,
      file = "data/sfsr_obs_20240611.rda")
 
 # END SCRIPT
-
-# save(dart_obs_ls,
-#      file = "data/dart_obs_ls.rda")
-# 
-# save(sfsr_sy23_obs,
-#      file = "data/sfsr_sy23_obs.rda")
-# 
-# save(sfsr_obs,
-#      file = "data/sfsr_obs.rda")

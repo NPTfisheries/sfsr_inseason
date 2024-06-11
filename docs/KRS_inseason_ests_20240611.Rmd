@@ -83,9 +83,9 @@ options(knitr.kable.NA = '-')
   * Static interpolation rate of 2 tags during the missed period at KRS when observations are typically decreasing.
 
 ```{r process-data}
-load("../data/sfsr_obs.rda")
+load(here("data/sfsr_obs_20240611.rda"))
 
-sfsr_fish <- sfsr_obs %>%
+sfsr_fish = sfsr_obs %>%
   filter(mark_site %in% c('LGRLDR', 'MCCA')) %>%
   filter(rel_site %in% c('LGRLDR', 'KNOXB')) %>%
   mutate(julian = lubridate::mdy(paste0(format(min_det, format = '%m-%d'), '-2020'))) %>%

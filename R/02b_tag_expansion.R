@@ -32,8 +32,8 @@ sfsr_obs_yr = sfsr_obs %>%
 
 # newly tagged fish observed at KRS
 lgrldr = sfsr_obs_yr %>%
-  filter(mark_site == "LGRLDR",
-         rel_site == "LGRLDR",
+  filter(mark_site %in% c('LGRLDR', 'MCCA'),
+         rel_site %in% c('LGRLDR', 'KNOXB'),
          node == "KRS",
          mark_rear_type_name == "W") %>%
   distinct(tag_code, 

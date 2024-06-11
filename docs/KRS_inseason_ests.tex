@@ -37,7 +37,6 @@
 \usepackage[margin=1in]{geometry}
 
 \usepackage[style=authoryear-comp,backend=biber, natbib=true,]{biblatex}
-\addbibresource{references.bib}
 
 \usepackage{longtable,booktabs}
 % Fix footnotes in tables (requires footnote package)
@@ -200,11 +199,8 @@
 \setlength{\TPVertModule}{1cm}
 
 \pretitle{%
-%
-\begin{textblock}{4}(2,0.8)\includegraphics[height=2.0cm]{NPT.png}\end{textblock}%
-\begin{textblock}{4}(17,0.8)\includegraphics[height=2.0cm]{DFRM.png}\end{textblock}%
-%\begin{textblock}{4}(16.5,0.8)\includegraphics[trim=53 0 0 0, clip=true,height=1.5cm]{NPT.png}\end{textblock}%
-\vspace*{-1.0cm}%-0.6
+
+\vspace*{-1cm}
 
 \LARGE\bfseries}
 \posttitle{\vspace*{0.3cm}\par}
@@ -216,7 +212,7 @@
 \raggedbottom
 
 \usepackage[australian]{babel}
-\date{October 17, 2023}
+\date{October 18, 2023}
 
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -242,7 +238,8 @@
 \begin{document}
 
 
-  \vspace*{0cm}
+  \vspace*{-2cm}
+  
   \definecolor{shadecolor}{RGB}{255,255,255} %210
   \begin{snugshade}%\sffamily
   \maketitle
@@ -259,55 +256,74 @@
 \hypertarget{summary}{%
 \section{Summary}\label{summary}}
 
+\hypertarget{july-17-2023}{%
+\subsection{July 17, 2023}\label{july-17-2023}}
+
 \begin{itemize}
+\tightlist
 \item
-  Current PIT-tag expansions at the Krasel PIT-array (KRA; as of October 17th, 2023)\footnote{Scripts to reproduce these summaries are available at: ``\url{https://github.com/NPTfisheries/sf_salmon_harvest.com}''.}
+  \emph{The estimated total ad-intact fish at KRS was 1,414 (949 NOR + 465 Integrated)}
+\item
+  Natural-origin
 
   \begin{itemize}
   \tightlist
   \item
-    656 natural-origin fish estimated from 118 observed tags and 18\% sampling/tagging rate (Tables 1 and 2)
+    656 natural-origin fish were estimated based on 118 observed tags and a 18\% sample/tag rate at Lower Granite Dam.
   \item
-    Using a 20\% tagging rate the estimate is 590.
+    KRS was non-operational: July 10-11 and July 14-16. Estimated natural-origin PIT-tags passing KRS during the non-operational period was estimated as \(\le\) 10 tags for an additional 56 natural-origin fish.
+  \item
+    The average passage date of \(\ge\) 75\% of the total return across KRS is July 15th (Figure \ref{fig:run-timing}).
+  \item
+    End of season natural-origin estimate predicted as 949.
+  \item
+    NOR: (656 + 56)/0.75 = 949.
   \end{itemize}
 \item
-  KRS was non-operational: 7/10, 7/11, 7/14, 7/15, and 7/16
+  Integrated
 
   \begin{itemize}
   \tightlist
   \item
-    Natural-origin PIT-tag passage during this period is estimated as \(\le\) 10 tags for an additional 56 natural-origin fish.
+    Estimated 465 McCall Integrated fish at Lower Granite Dam.
+  \item
+    Estimated 443 at KRS after accounting for SbyC (i.e., 95\% conversion).
+  \end{itemize}
+\end{itemize}
+
+\hypertarget{october-18-2023}{%
+\subsection{October 18, 2023}\label{october-18-2023}}
+
+\begin{itemize}
+\tightlist
+\item
+  \emph{Current estimated total ad-intact fish at KRS was 1,439 (912 NOR + 527 Integrated)}\footnote{Scripts to reproduce these summaries are available at: ``\url{https://github.com/NPTfisheries/sf_salmon_harvest.com}''.}
+\item
+  Natural-origin
+
+  \begin{itemize}
+  \tightlist
+  \item
+    856 natural-origin fish estimated based on 154 observed tags and a 18\% sample/tag rate at Lower Granite Dam.
+  \item
+    Assume 100\% passage past KRS.
+  \item
+    End of season natural-origin fish estimated as 856.
+  \item
+    NOR: (856 + 56)/1.00 - 912.
   \end{itemize}
 \item
-  The average passage date of \(\ge\) 75\% of the total return across KRS is July 15th (Figure \ref{fig:run-timing}).
-\item
-  End of season natural-origin estimate: 948
+  Integrated
 
   \begin{itemize}
   \tightlist
   \item
-    NOR: (656 + 56)/.75 = 949
-  \end{itemize}
-\item
-  Current Lower Granite Estimate of McCall Integrated fish is 465.
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Estimated at KRS after accounting for SbyC is 443 (95\% conversion)
-  \end{itemize}
-\item
-  \textbf{Total ad-intact fish at KRS: 1,413}
-
-  \begin{itemize}
-  \tightlist
-  \item
-    949 (NOR) + 465 (Integrated) = 1,414
+    Estimate 527 McCall Integrated fish at KRS based on 108 tags observed and ``group-specific'' expansion rates (Tables 1 and 2)
   \end{itemize}
 \end{itemize}
 
 \hypertarget{assumptions}{%
-\subsection{Assumptions}\label{assumptions}}
+\section{Assumptions}\label{assumptions}}
 
 \begin{itemize}
 \tightlist

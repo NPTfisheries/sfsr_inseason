@@ -12,10 +12,14 @@ rm(list = ls())
 # load necessary libraries
 library(tidyverse)
 library(here)
+library(readxl)
+library(janitor)
 
 # load data
 load(here("data/sfsr_obs_20240627.rda"))
 idfg_tag_exp = read_csv(file = here("data/idfg_tag_expansions.csv"))
+tag_exp = read_excel(path = here("data/2024 PIT_Tag_Analysis_Bonneville(4).xlsx"),
+                     sheet = "Historic Juv Rel Numbers")
 
 # recode some nodes in sfsr_obs 
 sfsr_obs = sfsr_obs %>%
@@ -47,6 +51,22 @@ lgrldr %>%
   ggplot(aes(x=mark_date)) +
   geom_histogram()
 
+# tag expansion rates
+exp_df = tag_exp %>%
+  clean_names() %>%
+  filter(str_detect(hatchery, "McCall")) %>%
+  mutate(mark_rate = pit_release_ral / hatch_release,
+         exp_rate = 1 / mark_rate) %>%
+  mutate(hatchery = case_when(
+    hatchery == "McCall (Int)" ~ "McCall - Integrated",
+    hatchery == "McCall (Seg)"  ~ "McCall - Segregated",
+    TRUE ~ hatchery
+  )) %>%
+  rename(
+    rel_group = hatchery,
+    rel_year = migr_year
+  )
+
 # summarize tags by release group, release year, and site code (node)
 tag_df = sfsr_obs_yr %>%
   select(tag_code,
@@ -61,7 +81,7 @@ tag_df = sfsr_obs_yr %>%
   mutate(rel_year = year(rel_date)) %>%
   filter(node %in% c("SFG", "KRS", "SALSFW", "STR")) %>%
   left_join(idfg_tag_exp %>%
-              select(Tag, SbyC, Expansion), 
+              select(Tag, SbyC, Expansion),
             by = c("tag_code" = "Tag")) %>%
   group_by(mark_site,
            rel_site,
@@ -92,7 +112,13 @@ tag_df = sfsr_obs_yr %>%
             .groups = "drop") %>%
   arrange(rel_group, 
           rel_year, 
-          node)
+          node) %>%
+  left_join(exp_df,
+            by = c("rel_group", "rel_year")) %>%
+  select(-SbyC, -Expansion)
+
+# attach new expansions to tag_df
+
 
 # # create expansion table
 # exp_tbl = tibble(
@@ -107,12 +133,12 @@ tag_df = sfsr_obs_yr %>%
 #                     1/0.18))  
 
 tag_exp = tag_df %>%
-  rename(tag_expansion = Expansion) %>%
-  mutate(tag_expansion = case_when(
+  mutate(exp_rate = case_when(
     rel_group == "LGR - NOR" ~ 1 / 0.20,
-    TRUE ~ tag_expansion
+    rel_group == "KNOXB - NOR" ~ 1,
+    TRUE ~ exp_rate
   )) %>%
-  mutate(est = round(n_tags * tag_expansion))
+  mutate(est = round(n_tags * exp_rate))
   
 # expand n tags by expansion rate
 # tag_exp = left_join(tag_df,
@@ -184,9 +210,10 @@ exp_df_2 = exp_df %>%
             by = c("node" = "site")) %>%
   mutate(tot_est = round(n_tags_exp / p, 0))
 
-# write to .rda
-write_csv(exp_df_2,
-          file = here("data/sfsr_expansion_sy2024.csv"))
+# write to file
+write_xlsx(list(tag_exp = tag_exp,
+                exp_df_2 = exp_df_2),
+           path = here("data/sfsr_expansion_sy2024.xlsx"))
 #save(tag_exp, exp_df, exp_df_2, file = './data/expansion.rda')
 
 # END SCRIPT

@@ -49,7 +49,7 @@ mark_data = dart_obs %>%
   distinct(tag_code, 
            .keep_all = TRUE)
 
-# compile compressed obs, SY2010 - 2023
+# compile compressed obs, SY2010 - 2024
 compress_obs = dart_obs_ls %>%
   map_dfr(. %>% 
             pluck("compress_obs"), 
@@ -89,6 +89,6 @@ sfsr_obs = compress_obs %>%
 # write out objects for analysis
 save(dart_obs_ls,
      sfsr_obs,
-     file = "data/sfsr_obs_20240611.rda")
+     file = "data/sfsr_obs_20240627.rda")
 
 # END SCRIPT

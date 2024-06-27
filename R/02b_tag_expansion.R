@@ -4,27 +4,30 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: October 17, 2023
+#   Modified: June 27, 2024
+
+# clear environment
+rm(list = ls())
 
 # load necessary libraries
 library(tidyverse)
 library(here)
 
 # load data
-load(here("data/sfsr_obs_20240611.rda"))
+load(here("data/sfsr_obs_20240627.rda"))
 idfg_tag_exp = read_csv(file = here("data/idfg_tag_expansions.csv"))
 
 # recode some nodes in sfsr_obs 
 sfsr_obs = sfsr_obs %>%
   mutate(node = case_when(
     node %in% c("ESSA0", "ESSB0") ~ "ESS",
-    node %in% c("ZENA0", "ZENBO") ~ "ZEN",
+    node %in% c("ZENA0", "ZENB0") ~ "ZEN",
     node %in% c("KRSA0", "KRSB0") ~ "KRS",
     TRUE ~ node
   ))
 
 # set some parameters
-yr = 2023
+yr = 2024
 
 # filter to year of interest
 sfsr_obs_yr = sfsr_obs %>%
@@ -72,11 +75,11 @@ tag_df = sfsr_obs_yr %>%
             .groups = "drop") %>%
   filter(rel_site %in% c("LGRLDR", "KNOXB")) %>%
   filter(!(rel_site == "LGRLDR" & mark_rear_type_name == "H")) %>%
-    mutate(rel_group = case_when(
+  mutate(rel_group = case_when(
     rel_site == "KNOXB" & str_detect(flags, "AI") ~ "McCall - Integrated",
     rel_site == "KNOXB" & str_detect(flags, "AD") ~ "McCall - Segregated",
     rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "LGR - NOR",
-    rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "Unknown",
+    rel_site == "KNOXB" & mark_rear_type_name == "W"  ~ "KNOXB - NOR",
     TRUE ~ NA
   )) %>%
   #ungroup() %>%
@@ -106,7 +109,7 @@ tag_df = sfsr_obs_yr %>%
 tag_exp = tag_df %>%
   rename(tag_expansion = Expansion) %>%
   mutate(tag_expansion = case_when(
-    rel_group == "LGR - NOR" ~ 1 / 0.18,
+    rel_group == "LGR - NOR" ~ 1 / 0.20,
     TRUE ~ tag_expansion
   )) %>%
   mutate(est = round(n_tags * tag_expansion))
@@ -182,6 +185,8 @@ exp_df_2 = exp_df %>%
   mutate(tot_est = round(n_tags_exp / p, 0))
 
 # write to .rda
-save(tag_exp, exp_df, exp_df_2, file = './data/expansion.rda')
+write_csv(exp_df_2,
+          file = here("data/sfsr_expansion_sy2024.csv"))
+#save(tag_exp, exp_df, exp_df_2, file = './data/expansion.rda')
 
 # END SCRIPT

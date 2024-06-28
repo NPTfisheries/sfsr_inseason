@@ -106,6 +106,6 @@ sfsr_obs = compress_obs %>%
 # write out objects for analysis
 save(dart_obs_ls,
      sfsr_obs,
-     file = here("data/observations/sfsr_obs_20240627.rda"))
+     file = paste0(here("data/observations/sfsr_obs_"), format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".rda"))
 
 # END SCRIPT

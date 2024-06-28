@@ -15,20 +15,29 @@ library(here)
 library(readxl)
 library(janitor)
 
-# load data
-load(here("data/sfsr_obs_20240627.rda"))
-idfg_tag_exp = read_csv(file = here("data/idfg_tag_expansions.csv"))
-tag_exp = read_excel(path = here("data/2024 PIT_Tag_Analysis_Bonneville(4).xlsx"),
-                     sheet = "Historic Juv Rel Numbers")
+# load observation data
+dt_tm = "2024-06-28_11-46-22"
+load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
+
+# load marking rate and/or tag expansion data
+mark_rates = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Bonneville.xlsx"),
+                        sheet = "Historic Juv Rel Numbers")
+
+idfg_tag_exp = read_csv(file = here("data/mark_rates/idfg_tag_expansions.csv")) %>%
+  clean_names() %>%
+  select(tag,
+         release_site_code,
+         sby_c,
+         exp_rate = expansion)
 
 # recode some nodes in sfsr_obs 
-sfsr_obs = sfsr_obs %>%
-  mutate(node = case_when(
-    node %in% c("ESSA0", "ESSB0") ~ "ESS",
-    node %in% c("ZENA0", "ZENB0") ~ "ZEN",
-    node %in% c("KRSA0", "KRSB0") ~ "KRS",
-    TRUE ~ node
-  ))
+# sfsr_obs = sfsr_obs %>%
+#   mutate(node = case_when(
+#     node %in% c("ESSA0", "ESSB0") ~ "ESS",
+#     node %in% c("ZENA0", "ZENB0") ~ "ZEN",
+#     node %in% c("KRSA0", "KRSB0") ~ "KRS",
+#     TRUE ~ node
+#   ))
 
 # set some parameters
 yr = 2024
@@ -38,182 +47,181 @@ sfsr_obs_yr = sfsr_obs %>%
   filter(spawn_year == yr)
 
 # newly tagged fish observed at KRS
-lgrldr = sfsr_obs_yr %>%
-  filter(mark_site %in% c('LGRLDR', 'MCCA'),
-         rel_site %in% c('LGRLDR', 'KNOXB'),
-         node == "KRS",
-         mark_rear_type_name == "W") %>%
-  distinct(tag_code, 
-           .keep_all = TRUE)
+# lgrldr = sfsr_obs_yr %>%
+#   filter(mark_site %in% c('LGRLDR', 'MCCA'),
+#          rel_site %in% c('LGRLDR', 'KNOXB'),
+#          node == "KRS",
+#          mark_rear_type_name == "W") %>%
+#   distinct(tag_code, 
+#            .keep_all = TRUE)
+# 
+# # histogram of mark dates for fish observed at KRS
+# lgrldr %>%
+#   ggplot(aes(x=mark_date)) +
+#   geom_histogram()
 
-# histogram of mark dates for fish observed at KRS
-lgrldr %>%
-  ggplot(aes(x=mark_date)) +
-  geom_histogram()
-
-# tag expansion rates
-exp_df = tag_exp %>%
+# tag mark and expansion rates
+exp_df = mark_rates %>%
   clean_names() %>%
   filter(str_detect(hatchery, "McCall")) %>%
-  mutate(mark_rate = pit_release_ral / hatch_release,
-         exp_rate = 1 / mark_rate) %>%
   mutate(hatchery = case_when(
     hatchery == "McCall (Int)" ~ "McCall - Integrated",
     hatchery == "McCall (Seg)"  ~ "McCall - Segregated",
     TRUE ~ hatchery
   )) %>%
-  rename(
-    rel_group = hatchery,
-    rel_year = migr_year
-  )
+  mutate(ral_mark_rate = pit_release_ral / hatch_release,
+         ral_exp_rate = 1 / ral_mark_rate) %>%
+  rename(rel_group = hatchery,
+         rel_year = migr_year)
 
 # summarize tags by release group, release year, and site code (node)
 tag_df = sfsr_obs_yr %>%
-  select(tag_code,
+  select(spawn_year,
+         tag_code,
          node,
-         event_date_time_value,
-         mark_rear_type_name,
+         event_type_name,
+         min_det,
          mark_site,
          mark_date,
+         mark_rear_type_name,
          rel_site,
          rel_date,
          flags) %>%
   mutate(rel_year = year(rel_date)) %>%
-  filter(node %in% c("SFG", "KRS", "SALSFW", "STR")) %>%
-  left_join(idfg_tag_exp %>%
-              select(Tag, SbyC, Expansion),
-            by = c("tag_code" = "Tag")) %>%
+  # for any tag that was observed at a node multiple times, just keep the first detection
+  group_by(tag_code, node) %>%
+  filter(min_det == min(min_det)) %>%
+  ungroup() %>%
+  # keep just detections within mainsten SF Salmon River
+  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR")) %>%
+  left_join(idfg_tag_exp, by = c("tag_code" = "tag")) %>%
   group_by(mark_site,
-           rel_site,
            mark_rear_type_name,
+           rel_site,
            rel_year,
-           SbyC,
-           Expansion,
+           sby_c,
+           exp_rate,
            flags,
            node) %>%
   summarise(n = n_distinct(tag_code),
             .groups = "drop") %>%
-  filter(rel_site %in% c("LGRLDR", "KNOXB")) %>%
-  filter(!(rel_site == "LGRLDR" & mark_rear_type_name == "H")) %>%
+  # only interested in tagged fish at LGR or hatchery release sites in SF Salmon
+  filter(rel_site %in% c("LGRLDR", "KNOXB", "SALTRP", "SFSRKT")) %>%
   mutate(rel_group = case_when(
-    rel_site == "KNOXB" & str_detect(flags, "AI") ~ "McCall - Integrated",
-    rel_site == "KNOXB" & str_detect(flags, "AD") ~ "McCall - Segregated",
+    rel_site == "KNOXB" & str_detect(flags, "AI")     ~ "McCall - Integrated",
+    rel_site == "KNOXB" & str_detect(flags, "AD")     ~ "McCall - Segregated",
+    rel_site == "LGRLDR" & str_detect(flags, "CW")    ~ "LGR - HOR",
     rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "LGR - NOR",
-    rel_site == "KNOXB" & mark_rear_type_name == "W"  ~ "KNOXB - NOR",
+    rel_site == "SALTRP" & mark_rear_type_name == "W" ~ "SALTRP - NOR",
+    rel_site == "KNOXB"  & mark_rear_type_name == "W" ~ "KNOXB - NOR",
+    rel_site == "SFSRKT" & mark_rear_type_name == "W" ~ "SFSRKT - NOR",
     TRUE ~ NA
   )) %>%
-  #ungroup() %>%
-  group_by(rel_group, 
+  group_by(rel_group,
            rel_year,
-           SbyC,
-           Expansion,
-           node) %>%
-  summarise(n_tags = sum(n),
+           node,
+           sby_c,
+           exp_rate) %>%
+  summarize(n_tags = sum(n),
             .groups = "drop") %>%
-  arrange(rel_group, 
-          rel_year, 
+  arrange(rel_group,
+          rel_year,
           node) %>%
-  left_join(exp_df,
-            by = c("rel_group", "rel_year")) %>%
-  select(-SbyC, -Expansion)
-
-# attach new expansions to tag_df
-
-
-# # create expansion table
-# exp_tbl = tibble(
-#   rel_group = c("McCall - Integrated", "McCall - Integrated", 
-#                 "McCall - Segregated", "McCall - Segregated",
-#                 "LGR - NOR"),
-#   rel_year = c(2021, 2022,
-#                2021, 2022,
-#                2023),
-#   tag_expansion = c(7, 8,
-#                     67, 13,
-#                     1/0.18))  
+  left_join(exp_df %>%
+              select(rel_group,
+                     rel_year,
+                     ral_mark_rate,
+                     ral_exp_rate),
+            by = c("rel_group", "rel_year"))
 
 tag_exp = tag_df %>%
   mutate(exp_rate = case_when(
-    rel_group == "LGR - NOR" ~ 1 / 0.20,
-    rel_group == "KNOXB - NOR" ~ 1,
-    TRUE ~ exp_rate
+    str_detect(rel_group, "LGR") ~ 1 / 0.20, # the LGR sample rate
+    TRUE ~ ral_exp_rate
   )) %>%
-  mutate(est = round(n_tags * exp_rate))
-  
-# expand n tags by expansion rate
-# tag_exp = left_join(tag_df,
-#                     exp_tbl) %>%
-#   mutate(est = round(n_tags * tag_expansion))
-
-# expansion summary
-exp_df = tag_exp %>%
+  select(-ral_mark_rate,
+         -ral_exp_rate) %>%
+  mutate(n_tags_exp = round(n_tags * exp_rate)) %>%
   group_by(rel_group, node) %>%
   summarise(n_tags = sum(n_tags, na.rm = T),
-            n_tags_exp = sum(est, na.rm = T),
+            n_tags_exp = sum(n_tags_exp, na.rm = T),
             .groups = "drop")
 
 #---------------------------------
 # calculate detection probabilities
+library(PITcleanr)
+load(here("data/configuration_files/site_config_LGR_20240304.rda"))
 
-# load data
-#load("data/sfsr_obs.rda")
-
-# nodes of interest for det probs
-sf_nodes = c("SFG", "KRS", "SALSFW", "STR")
-
-# convert observations into capture histories
-sf_ch = sfsr_obs %>%
-  filter(node %in% sf_nodes) %>%
-  mutate(node = factor(node,
-                       levels = sf_nodes)) %>%
-  select(tag_code, spawn_year, node) %>%
-  distinct() %>%
-  mutate(seen = 1) %>%
-  pivot_wider(names_from = node,
-              values_from = seen,
-              values_fill = 0,
-              names_sort = T,
-              names_expand = T) %>%
-  mutate(SF_weir = if_else(SALSFW == 1 | STR == 1, 1, 0)) %>%
-  select(-SALSFW, -STR)
-
-# SFG & KRS detection probs by spawn year
-sf_p_x_sy = sf_ch %>%
-  mutate(pass_SFG = if_else(SF_weir == 1 | KRS == 1, T, F)) %>%
-  select(spawn_year, pass_SFG, SFG) %>%
-  filter(pass_SFG == T) %>%
+# calculate node detection efficiencies for all spawn years
+node_eff = sfsr_obs %>%
   group_by(spawn_year) %>%
-  summarise(n_tags = n(),
-            p = sum(SFG) / n(),
-            .groups = "drop") %>%
-  mutate(site = "SFG") %>%
-  bind_rows(sf_ch %>%
-              mutate(pass_KRS = if_else(SF_weir == 1, T, F)) %>%
-              select(spawn_year, pass_KRS, KRS) %>%
-              filter(pass_KRS == T) %>%
-              group_by(spawn_year)%>%
-              summarise(n_tags = n(),
-                        p = sum(KRS) / n()) %>%
-              mutate(site = "KRS")) %>%
-  arrange(spawn_year, site)
-
-# SFG & KRS detection probs
-sf_p = sf_p_x_sy %>%
-  group_by(site) %>%
-  summarise(n_tags = sum(n_tags),
-            p = mean(p))
+  do(estNodeEff(capHist_proc = ., 
+                node_order = node_paths)) %>%
+  ungroup() %>%
+  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR"))
 
 # expand estimates by site detection probabilities
-exp_df_2 = exp_df %>%
-  left_join(sf_p %>%
-              select(site, p),
-            by = c("node" = "site")) %>%
-  mutate(tot_est = round(n_tags_exp / p, 0))
+exp_summ = tag_exp %>%
+  filter(str_detect(rel_group, "McCall") | str_detect(rel_group, "LGR")) %>%
+  filter(rel_group != "LGR - HOR") %>%
+  left_join(node_eff %>%
+              filter(spawn_year == yr) %>%
+              select(node, 
+                     eff_est, 
+                     eff_se)) %>%
+  mutate(tot_est = round(n_tags_exp / eff_est)) %>%
+  filter(node != "KRS_U") %>%
+  arrange(rel_group,
+          desc(node))
 
 # write to file
-write_xlsx(list(tag_exp = tag_exp,
-                exp_df_2 = exp_df_2),
-           path = here("data/sfsr_expansion_sy2024.xlsx"))
-#save(tag_exp, exp_df, exp_df_2, file = './data/expansion.rda')
+library(writexl)
+write_xlsx(list(tag_exp_rel_group = tag_exp,
+                exp_summary = exp_summ),
+           path = paste0(here("output"), "/sfsr_inseason_ests_sy24_", dt_tm, ".xlsx"))
+
+# OLD CODE FOR CALCULATING DETECTION PROBS
+# convert observations into capture histories
+# sf_ch = sfsr_obs %>%
+#   filter(node %in% sf_nodes) %>%
+#   mutate(node = factor(node,
+#                        levels = sf_nodes)) %>%
+#   select(tag_code, spawn_year, node) %>%
+#   distinct() %>%
+#   mutate(seen = 1) %>%
+#   pivot_wider(names_from = node,
+#               values_from = seen,
+#               values_fill = 0,
+#               names_sort = T,
+#               names_expand = T) %>%
+#   mutate(SF_weir = if_else(SALSFW == 1 | STR == 1, 1, 0)) %>%
+#   select(-SALSFW, -STR)
+# 
+# # SFG & KRS detection probs by spawn year
+# sf_p_x_sy = sf_ch %>%
+#   mutate(pass_SFG = if_else(SF_weir == 1 | KRS == 1, T, F)) %>%
+#   select(spawn_year, pass_SFG, SFG) %>%
+#   filter(pass_SFG == T) %>%
+#   group_by(spawn_year) %>%
+#   summarise(n_tags = n(),
+#             p = sum(SFG) / n(),
+#             .groups = "drop") %>%
+#   mutate(site = "SFG") %>%
+#   bind_rows(sf_ch %>%
+#               mutate(pass_KRS = if_else(SF_weir == 1, T, F)) %>%
+#               select(spawn_year, pass_KRS, KRS) %>%
+#               filter(pass_KRS == T) %>%
+#               group_by(spawn_year)%>%
+#               summarise(n_tags = n(),
+#                         p = sum(KRS) / n()) %>%
+#               mutate(site = "KRS")) %>%
+#   arrange(spawn_year, site)
+# 
+# # SFG & KRS detection probs
+# sf_p = sf_p_x_sy %>%
+#   group_by(site) %>%
+#   summarise(n_tags = sum(n_tags),
+#             p = mean(p))
+
 
 # END SCRIPT

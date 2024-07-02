@@ -16,7 +16,7 @@ library(readxl)
 library(janitor)
 
 # load observation data
-dt_tm = "2024-06-28_11-46-22"
+dt_tm = "2024-07-02_08-45-21"
 load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
 
 # load marking rate and/or tag expansion data

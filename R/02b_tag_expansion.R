@@ -189,6 +189,7 @@ exp_summ = tag_exp %>%
                      eff_se)) %>%
   mutate(tot_est = round(n_tags_exp / eff_est)) %>%
   filter(node != "KRS_U") %>%
+  # parse by adults vs. jacks
   mutate(age = case_when(
     str_detect(rel_group, "LGR")        ~ "All",
     ocean_age == "2" | ocean_age == "3" ~ "Adults",

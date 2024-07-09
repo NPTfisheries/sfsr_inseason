@@ -4,7 +4,7 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: June 27, 2024
+#   Modified: July 9, 2024
 
 # clear environment
 rm(list = ls())
@@ -16,19 +16,22 @@ library(readxl)
 library(janitor)
 
 # load observation data
-dt_tm = "2024-07-02_08-45-21"
+dt_tm = "2024-07-09_08-58-23"
 load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
 
 # load marking rate and/or tag expansion data
-mark_rates = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Bonneville.xlsx"),
-                        sheet = "Historic Juv Rel Numbers")
-
-idfg_tag_exp = read_csv(file = here("data/mark_rates/idfg_tag_expansions.csv")) %>%
+lgr_tag_exp = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_LowerGranite_20240708.xlsx"),
+                         sheet = "PIT Data") %>%
   clean_names() %>%
   select(tag,
          release_site_code,
+         brood_year,
+         ocean_age,
          sby_c,
          exp_rate = expansion)
+
+bon_mark_rates = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Bonneville.xlsx"),
+                        sheet = "Historic Juv Rel Numbers")
 
 # recode some nodes in sfsr_obs 
 # sfsr_obs = sfsr_obs %>%
@@ -61,7 +64,7 @@ sfsr_obs_yr = sfsr_obs %>%
 #   geom_histogram()
 
 # tag mark and expansion rates
-exp_df = mark_rates %>%
+exp_df = bon_mark_rates %>%
   clean_names() %>%
   filter(str_detect(hatchery, "McCall")) %>%
   mutate(hatchery = case_when(
@@ -94,11 +97,12 @@ tag_df = sfsr_obs_yr %>%
   ungroup() %>%
   # keep just detections within mainsten SF Salmon River
   filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR")) %>%
-  left_join(idfg_tag_exp, by = c("tag_code" = "tag")) %>%
+  left_join(lgr_tag_exp, by = c("tag_code" = "tag")) %>%
   group_by(mark_site,
            mark_rear_type_name,
            rel_site,
            rel_year,
+           ocean_age,
            sby_c,
            exp_rate,
            flags,
@@ -106,46 +110,60 @@ tag_df = sfsr_obs_yr %>%
   summarise(n = n_distinct(tag_code),
             .groups = "drop") %>%
   # only interested in tagged fish at LGR or hatchery release sites in SF Salmon
-  filter(rel_site %in% c("LGRLDR", "KNOXB", "SALTRP", "SFSRKT")) %>%
+  filter(rel_site %in% c("LGRLDR", "KNOXB", "SALTRPT", "SFSRKT")) %>%
   mutate(rel_group = case_when(
     rel_site == "KNOXB" & str_detect(flags, "AI")     ~ "McCall - Integrated",
     rel_site == "KNOXB" & str_detect(flags, "AD")     ~ "McCall - Segregated",
-    rel_site == "LGRLDR" & str_detect(flags, "CW")    ~ "LGR - HOR",
     rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "LGR - NOR",
-    rel_site == "SALTRP" & mark_rear_type_name == "W" ~ "SALTRP - NOR",
+    rel_site == "LGRLDR" & str_detect(flags, "CW")    ~ "LGR - HOR",
     rel_site == "KNOXB"  & mark_rear_type_name == "W" ~ "KNOXB - NOR",
     rel_site == "SFSRKT" & mark_rear_type_name == "W" ~ "SFSRKT - NOR",
     TRUE ~ NA
   )) %>%
   group_by(rel_group,
            rel_year,
-           node,
+           ocean_age,
            sby_c,
-           exp_rate) %>%
+           exp_rate,
+           node) %>%
   summarize(n_tags = sum(n),
             .groups = "drop") %>%
   arrange(rel_group,
           rel_year,
-          node) %>%
-  left_join(exp_df %>%
-              select(rel_group,
-                     rel_year,
-                     ral_mark_rate,
-                     ral_exp_rate),
-            by = c("rel_group", "rel_year"))
+          node) # %>%
+  # left_join(exp_df %>%
+  #             select(rel_group,
+  #                    rel_year,
+  #                    ral_mark_rate,
+  #                    ral_exp_rate),
+  #           by = c("rel_group", "rel_year"))
 
 tag_exp = tag_df %>%
   mutate(exp_rate = case_when(
-    str_detect(rel_group, "LGR") ~ 1 / 0.20, # the LGR sample rate
-    TRUE ~ ral_exp_rate
+    str_detect(rel_group, "LGR - NOR") ~ 1 / 0.20, # the LGR sample rate
+    TRUE ~ exp_rate
   )) %>%
-  select(-ral_mark_rate,
-         -ral_exp_rate) %>%
   mutate(n_tags_exp = round(n_tags * exp_rate)) %>%
-  group_by(rel_group, node) %>%
+  group_by(rel_group,
+           rel_year,
+           ocean_age,
+           node) %>%
   summarise(n_tags = sum(n_tags, na.rm = T),
             n_tags_exp = sum(n_tags_exp, na.rm = T),
             .groups = "drop")
+
+# tag_exp = tag_df %>%
+#   mutate(exp_rate = case_when(
+#     str_detect(rel_group, "LGR") ~ 1 / 0.20, # the LGR sample rate
+#     TRUE ~ ral_exp_rate
+#   )) %>%
+#   select(-ral_mark_rate,
+#          -ral_exp_rate) %>%
+#   mutate(n_tags_exp = round(n_tags * exp_rate)) %>%
+#   group_by(rel_group, node) %>%
+#   summarise(n_tags = sum(n_tags, na.rm = T),
+#             n_tags_exp = sum(n_tags_exp, na.rm = T),
+#             .groups = "drop")
 
 #---------------------------------
 # calculate detection probabilities
@@ -171,8 +189,32 @@ exp_summ = tag_exp %>%
                      eff_se)) %>%
   mutate(tot_est = round(n_tags_exp / eff_est)) %>%
   filter(node != "KRS_U") %>%
+  mutate(age = case_when(
+    str_detect(rel_group, "LGR")        ~ "All",
+    ocean_age == "2" | ocean_age == "3" ~ "Adults",
+    ocean_age == "1"                    ~ "Jacks",
+    TRUE ~ NA
+  )) %>%
+  group_by(rel_group,
+           age,
+           node,
+           eff_est,
+           eff_se) %>%
+  summarize(n_tags = sum(n_tags),
+            n_tags_exp = sum(n_tags_exp),
+            tot_est = sum(tot_est),
+            .groups = "drop") %>%
+  select(rel_group,
+         age,
+         node,
+         n_tags,
+         n_tags_exp,
+         eff_est,
+         eff_se,
+         tot_est) %>%
   arrange(rel_group,
-          desc(node))
+          desc(node),
+          age)
 
 # write to file
 library(writexl)

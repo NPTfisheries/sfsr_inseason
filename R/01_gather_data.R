@@ -4,7 +4,7 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: June 27, 2024
+#   Modified: July 9, 2024
 
 # clear environment
 rm(list = ls())
@@ -19,7 +19,6 @@ library(janitor)
 # load configuration file
 load(here("data/configuration_files/site_config_LGR_20240304.rda"))
 rm(flowlines, node_paths, parent_child, pc_nodes, sites_sf)
-#load("data/config.rda")
 
 # which spawn years to query
 yrs <- 2010:2024

@@ -15,11 +15,18 @@ library(here)
 library(readxl)
 library(janitor)
 
+# get the date-time from the most recent dart observations
+dt_tm = list.files(path = here("data/observations/"),
+                   recursive = F,
+                   full.names = F) %>%
+  sort() %>%
+  .[length(.)] %>%
+  sub("^[^_]*_[^_]*_([^\\.]+)\\.rda$", "\\1", .)
+
 # load observation data
-dt_tm = "2024-07-09_08-58-23"
 load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
 
-# load marking rate and/or tag expansion data
+# load lgr tag expansion data, the preferred option
 lgr_tag_exp = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_LowerGranite_20240708.xlsx"),
                          sheet = "PIT Data") %>%
   clean_names() %>%
@@ -30,17 +37,20 @@ lgr_tag_exp = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Lowe
          sby_c,
          exp_rate = expansion)
 
-bon_mark_rates = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Bonneville.xlsx"),
-                        sheet = "Historic Juv Rel Numbers")
-
-# recode some nodes in sfsr_obs 
-# sfsr_obs = sfsr_obs %>%
-#   mutate(node = case_when(
-#     node %in% c("ESSA0", "ESSB0") ~ "ESS",
-#     node %in% c("ZENA0", "ZENB0") ~ "ZEN",
-#     node %in% c("KRSA0", "KRSB0") ~ "KRS",
-#     TRUE ~ node
-#   ))
+# load generic mark rates from bon, the backup option
+bon_exp_rates = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Bonneville.xlsx"),
+                        sheet = "Historic Juv Rel Numbers") %>%
+  clean_names() %>%
+  filter(str_detect(hatchery, "McCall")) %>%
+  mutate(hatchery = case_when(
+    hatchery == "McCall (Int)" ~ "McCall - Integrated",
+    hatchery == "McCall (Seg)"  ~ "McCall - Segregated",
+    TRUE ~ hatchery
+  )) %>%
+  mutate(ral_mark_rate = pit_release_ral / hatch_release,
+         ral_exp_rate = 1 / ral_mark_rate) %>%
+  rename(rel_group = hatchery,
+         rel_year = migr_year)
 
 # set some parameters
 yr = 2024
@@ -63,20 +73,6 @@ sfsr_obs_yr = sfsr_obs %>%
 #   ggplot(aes(x=mark_date)) +
 #   geom_histogram()
 
-# tag mark and expansion rates
-exp_df = bon_mark_rates %>%
-  clean_names() %>%
-  filter(str_detect(hatchery, "McCall")) %>%
-  mutate(hatchery = case_when(
-    hatchery == "McCall (Int)" ~ "McCall - Integrated",
-    hatchery == "McCall (Seg)"  ~ "McCall - Segregated",
-    TRUE ~ hatchery
-  )) %>%
-  mutate(ral_mark_rate = pit_release_ral / hatch_release,
-         ral_exp_rate = 1 / ral_mark_rate) %>%
-  rename(rel_group = hatchery,
-         rel_year = migr_year)
-
 # summarize tags by release group, release year, and site code (node)
 tag_df = sfsr_obs_yr %>%
   select(spawn_year,
@@ -97,6 +93,7 @@ tag_df = sfsr_obs_yr %>%
   ungroup() %>%
   # keep just detections within mainsten SF Salmon River
   filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR")) %>%
+  # join tag-specific lgr tag detection rates
   left_join(lgr_tag_exp, by = c("tag_code" = "tag")) %>%
   group_by(mark_site,
            mark_rear_type_name,
@@ -130,17 +127,20 @@ tag_df = sfsr_obs_yr %>%
             .groups = "drop") %>%
   arrange(rel_group,
           rel_year,
-          node) # %>%
-  # left_join(exp_df %>%
-  #             select(rel_group,
-  #                    rel_year,
-  #                    ral_mark_rate,
-  #                    ral_exp_rate),
-  #           by = c("rel_group", "rel_year"))
+          node) %>%
+  # join bon group mark rates (back-up)
+  left_join(bon_exp_rates %>%
+              select(rel_group,
+                     rel_year,
+                     ral_exp_rate),
+            by = c("rel_group", "rel_year"))
 
+# perform tag expansions
+lgr_trap_rate = 0.20
 tag_exp = tag_df %>%
   mutate(exp_rate = case_when(
-    str_detect(rel_group, "LGR - NOR") ~ 1 / 0.20, # the LGR sample rate
+    str_detect(rel_group, "LGR - NOR") ~ 1 / lgr_trap_rate, # the LGR sample rate
+    is.na(exp_rate) ~ ral_exp_rate,                         # if not lgr expansion rate, use bon rate
     TRUE ~ exp_rate
   )) %>%
   mutate(n_tags_exp = round(n_tags * exp_rate)) %>%
@@ -151,19 +151,6 @@ tag_exp = tag_df %>%
   summarise(n_tags = sum(n_tags, na.rm = T),
             n_tags_exp = sum(n_tags_exp, na.rm = T),
             .groups = "drop")
-
-# tag_exp = tag_df %>%
-#   mutate(exp_rate = case_when(
-#     str_detect(rel_group, "LGR") ~ 1 / 0.20, # the LGR sample rate
-#     TRUE ~ ral_exp_rate
-#   )) %>%
-#   select(-ral_mark_rate,
-#          -ral_exp_rate) %>%
-#   mutate(n_tags_exp = round(n_tags * exp_rate)) %>%
-#   group_by(rel_group, node) %>%
-#   summarise(n_tags = sum(n_tags, na.rm = T),
-#             n_tags_exp = sum(n_tags_exp, na.rm = T),
-#             .groups = "drop")
 
 #---------------------------------
 # calculate detection probabilities
@@ -223,6 +210,8 @@ write_xlsx(list(tag_exp_rel_group = tag_exp,
                 exp_summary = exp_summ),
            path = paste0(here("output"), "/sfsr_inseason_ests_sy24_", dt_tm, ".xlsx"))
 
+# END SCRIPT
+
 # OLD CODE FOR CALCULATING DETECTION PROBS
 # convert observations into capture histories
 # sf_ch = sfsr_obs %>%
@@ -265,6 +254,3 @@ write_xlsx(list(tag_exp_rel_group = tag_exp,
 #   group_by(site) %>%
 #   summarise(n_tags = sum(n_tags),
 #             p = mean(p))
-
-
-# END SCRIPT

@@ -4,7 +4,7 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: July 9, 2024
+#   Modified: July 10, 2024
 
 # clear environment
 rm(list = ls())
@@ -21,16 +21,16 @@ load(here("data/configuration_files/site_config_LGR_20240304.rda"))
 rm(flowlines, node_paths, parent_child, pc_nodes, sites_sf)
 
 # which spawn years to query
-yrs <- 2010:2024
+yrs = 2010:2024
 
 # create list of DART observations, by spawn year, compressed
-dart_obs_ls <- map(.x = yrs,
-                   .f = function(x){
-                     compressDART(species = "Chinook",
-                                  loc = "GRA",
-                                  spawn_year = x,
-                                  configuration = configuration)
-    })
+dart_obs_ls = map(.x = yrs,
+                  .f = function(x){
+                    compressDART(species = "Chinook",
+                                 loc = "GRA",
+                                 spawn_year = x,
+                                 configuration = configuration)
+                    })
 
 # assign names to dfs
 names(dart_obs_ls) = yrs
@@ -54,7 +54,7 @@ mark_data = dart_obs %>%
   distinct(tag_code,
            .keep_all = TRUE)
 
-# compile compressed obs, SY2010 - 2024
+# compile compressed obs and join the mark data
 compress_obs = dart_obs_ls %>%
   map_dfr(. %>% 
             pluck("compress_obs"),
@@ -62,45 +62,20 @@ compress_obs = dart_obs_ls %>%
   left_join(mark_data)
 
 # nodes of interest in south fork salmon river
-sfsr_nodes = c("ESS_D", "ESS_U", "JOHNSC", "KNOXB", "KRS", "KRS_D", "KRS_U", "LAKEC", "MCCA", "SALSFW", "SFG", "STR", "ZEN_D", "ZEN_U")
+sfsr_nodes = c("ESS_D", "ESS_U", "JOHNSC",       # East Fork South Fork Salmon
+               "ZEN_D", "ZEN_U", "LAKEC",        # Secesh River
+               "SFG", "KRS", "KRS_D", "KRS_U",   # South Fork Salmon Arrays
+               "KNOXB", "MCCA", "SALSFW", "STR") # South Fork Salmon weir and MRR sites
 
 # trim down to just tags observed within the sfsr, all years
 sfsr_obs = compress_obs %>%
   group_by(tag_code) %>%
   filter(any(node %in% sfsr_nodes)) %>%
   ungroup() %>%
+  # recode MCCA and SALSFW to be same as STR
   mutate(node = recode(node,
                        MCCA = "STR",
                        SALSFW = "STR"))
-
-# sfsr_tags = compress_obs %>%
-#   filter(node %in% c("SFG", "ESS", "ZEN", "KRS", "STR", "SALSFW", "MCCA")) %>%
-#   mutate(node = recode(node,
-#                        MCCA = "STR",
-#                        SALSFW = "STR")) %>%
-#   distinct(tag_code) %>%
-#   pull()
-
-# now get all of the observations for those tags observed within the sfsr 
-# i.e., we don't just want the sfsr observations
-# sfsr_obs = compress_obs %>%
-#   filter(tag_code %in% sfsr_tags)
-
-# # write tag list
-# write.table(sfsr_sy23_tags,
-#             here("data/sfsr_sy23_tags.txt"),
-#             quote = F,
-#             row.names = F,
-#             col.names = F,
-#             sep = "\t")
-
-# compressed observations for tags observed in SFSR, SY2024
-# sfsr_sy23_obs = sfsr_obs %>%
-#   filter(spawn_year == 2023)
-
-# compressed observations for tags observed in SFSR, SY2024
-# sfsr_sy24_obs = sfsr_obs %>%
-#   filter(spawn_year == 2024)
 
 # write out objects for analysis
 save(dart_obs_ls,

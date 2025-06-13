@@ -27,7 +27,7 @@ dt_tm = list.files(path = here("data/observations/"),
 load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
 
 # load lgr tag expansion data, the preferred option
-lgr_tag_exp = read_excel(path = here("data/mark_rates/2025 PIT_Tag_Analysis_LowerGranite_20250611.xlsx"),
+lgr_tag_exp = read_excel(path = here("data/mark_rates/2025 PIT_Tag_Analysis_LowerGranite_20250613.xlsx"),
                          sheet = "PIT Data") %>%
   clean_names() %>%
   select(tag,
@@ -137,10 +137,12 @@ tag_df = sfsr_obs_yr %>%
 
 # perform tag expansions
 lgr_trap_rate = 0.20
+lgr_hor_subsample_rate = 0.25
 tag_exp = tag_df %>%
   mutate(exp_rate = case_when(
-    str_detect(rel_group, "LGR - NOR") ~ 1 / lgr_trap_rate, # the LGR sample rate
-    is.na(exp_rate) ~ ral_exp_rate,                         # if not lgr expansion rate, use bon rate
+    str_detect(rel_group, "LGR - NOR") ~ 1 / lgr_trap_rate,                            # the LGR sample rate
+    str_detect(rel_group, "LGR - HOR") ~ 1 / (lgr_trap_rate * lgr_hor_subsample_rate),
+    is.na(exp_rate) ~ ral_exp_rate,                                                    # if not lgr expansion rate, use bon rate
     TRUE ~ exp_rate
   )) %>%
   mutate(n_tags_exp = round(n_tags * exp_rate)) %>%
@@ -155,7 +157,10 @@ tag_exp = tag_df %>%
 #---------------------------------
 # calculate detection probabilities
 library(PITcleanr)
-load(here("data/configuration_files/site_config_LGR_20240304.rda"))
+load(here("data/configuration_files/site_config_LGR_20250416.rda"))
+
+node_paths = addParentChildNodes(parent_child, configuration) %>%
+  buildNodeOrder()
 
 # calculate node detection efficiencies for all spawn years
 node_eff = sfsr_obs %>%
@@ -168,6 +173,7 @@ node_eff = sfsr_obs %>%
 # expand estimates by site detection probabilities
 exp_summ = tag_exp %>%
   filter(str_detect(rel_group, "McCall") | str_detect(rel_group, "LGR")) %>%
+  # can't use tagging of ad-clipped adults at LGR i.e., exclude them... would be additive to juvenile releases
   filter(rel_group != "LGR - HOR") %>%
   left_join(node_eff %>%
               filter(spawn_year == yr) %>%
@@ -208,7 +214,7 @@ exp_summ = tag_exp %>%
 library(writexl)
 write_xlsx(list(tag_exp_rel_group = tag_exp,
                 exp_summary = exp_summ),
-           path = paste0(here("output"), "/sfsr_inseason_ests_sy24_", dt_tm, ".xlsx"))
+           path = paste0(here("output"), "/sfsr_inseason_ests_sy25_", dt_tm, ".xlsx"))
 
 # END SCRIPT
 

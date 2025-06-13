@@ -4,7 +4,7 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: July 9, 2024
+#   Modified: June 13, 2025
 
 # clear environment
 rm(list = ls())
@@ -27,7 +27,7 @@ dt_tm = list.files(path = here("data/observations/"),
 load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
 
 # load lgr tag expansion data, the preferred option
-lgr_tag_exp = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_LowerGranite_20240708.xlsx"),
+lgr_tag_exp = read_excel(path = here("data/mark_rates/2025 PIT_Tag_Analysis_LowerGranite_20250611.xlsx"),
                          sheet = "PIT Data") %>%
   clean_names() %>%
   select(tag,
@@ -53,7 +53,7 @@ bon_exp_rates = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Bo
          rel_year = migr_year)
 
 # set some parameters
-yr = 2024
+yr = 2025
 
 # filter to year of interest
 sfsr_obs_yr = sfsr_obs %>%

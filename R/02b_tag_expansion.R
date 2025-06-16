@@ -4,7 +4,7 @@
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: June 13, 2025
+#   Modified: June 16, 2025
 
 # clear environment
 rm(list = ls())
@@ -38,7 +38,7 @@ lgr_tag_exp = read_excel(path = here("data/mark_rates/2025 PIT_Tag_Analysis_Lowe
          exp_rate = expansion)
 
 # load generic mark rates from bon, the backup option
-bon_exp_rates = read_excel(path = here("data/mark_rates/2024 PIT_Tag_Analysis_Bonneville.xlsx"),
+bon_exp_rates = read_excel(path = here("data/mark_rates/2025 PIT_Tag_Analysis_Bonneville.xlsx"),
                         sheet = "Historic Juv Rel Numbers") %>%
   clean_names() %>%
   filter(str_detect(hatchery, "McCall")) %>%

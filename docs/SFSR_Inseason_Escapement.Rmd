@@ -1,0 +1,325 @@
+---
+title: "In-season Escapement Estimates to the SFG and KRS PIT-tag Arrays in the South Fork Salmon River"
+author:
+  - name: "Michael W. Ackerman"
+    email: mikea@nezperce.org
+    affiliation: "Research Scientist"
+    correspondence: yes
+
+  - name: "Ryan N. Kinzer"
+    affiliation: "Fisheries Data Analyst and Coordinator"
+
+  - name: "Jason Vogel"
+    affiliation: "Research Division Director"
+
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::html_document2:
+    theme: cerulean
+---
+
+<!-- the following inserts the NPT logo into header -->
+```{=html}
+<script>
+   $(document).ready(function() {
+     $head = $('#header');
+     $head.prepend('<img src=\"DFRM.png\" style=\"float: right;width: 150px;\"/>')
+   });
+</script>
+
+<style>
+p.caption {
+  font-size: 0.8em;
+}
+</style>
+```
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE,
+  comment = "#>",
+  fig.path = "../figures/",
+  dev = c("pdf", "png", "tiff"),
+  dpi = 400
+)
+
+```
+
+```{r load-libraries}
+# for formatting
+library(kableExtra)
+
+# load necessary libraries
+library(tidyverse)
+library(here)
+library(readxl)
+library(janitor)
+
+```
+
+```{r set-parameters}
+yr = 2025                                                 # current year
+lgr_trap_rate = 0.20                                      # set and assumed lgr trapping and tagging rate
+lgr_hor_subsample_rate = 0.25
+lgr_mark_filepath = here("data/mark_rates/2025 PIT_Tag_Analysis_LowerGranite.xlsx")  # path to lgr tag-specific expansion data
+bon_exp_filepath  = here("data/mark_rates/2025 PIT_Tag_Analysis_Bonneville.xlsx")    # path to past bon expansion rates (backup option)
+
+```
+
+```{r load-data}
+# get the date-time from the most recent dart observations
+dt_tm = list.files(path = here("data/observations/"),
+                   recursive = F,
+                   full.names = F) %>%
+  sort() %>%
+  .[length(.)] %>%
+  sub("^[^_]*_[^_]*_([^\\.]+)\\.rda$", "\\1", .)
+
+# load dart observation data
+load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
+
+# filter to year of interest
+sfsr_obs_yr = sfsr_obs %>%
+  filter(spawn_year == yr) ; rm(sfsr_obs)
+
+# load lgr tag expansion data, the preferred option, for current year
+lgr_tag_exp = read_excel(path = lgr_mark_filepath,
+                         sheet = "PIT Data") %>%
+  clean_names() %>%
+  filter(!is.na(tag)) %>%
+  select(tag,
+         release_site_code,
+         brood_year,
+         ocean_age,
+         sby_c,
+         exp_rate = expansion)
+
+# load historic generic mark rates from bon, the backup option
+bon_exp_rates = read_excel(path = bon_exp_filepath,
+                        sheet = "Historic Juv Rel Numbers") %>%
+  clean_names() %>%
+  filter(str_detect(hatchery, "McCall")) %>%
+  mutate(hatchery = case_when(
+    hatchery == "McCall (Int)" ~ "McCall - Integrated",
+    hatchery == "McCall (Seg)"  ~ "McCall - Segregated",
+    TRUE ~ hatchery
+  )) %>%
+  mutate(ral_mark_rate = pit_release_ral / hatch_release,
+         ral_exp_rate = 1 / ral_mark_rate) %>%
+  rename(rel_group = hatchery,
+         rel_year = migr_year)
+
+```
+
+```{r prep-data}
+# summarize tags by release group, release year, and site code (node)
+tag_df = sfsr_obs_yr %>%
+  select(spawn_year,
+         tag_code,
+         node,
+         event_type_name,
+         min_det,
+         mark_site,
+         mark_date,
+         mark_rear_type_name,
+         rel_site,
+         rel_date,
+         flags) %>%
+  mutate(rel_year = year(rel_date)) %>%
+  # for any tag that was observed at a node multiple times, just keep the first detection
+  group_by(tag_code, node) %>%
+  filter(min_det == min(min_det)) %>%
+  ungroup() %>%
+  # keep just detections within mainsten SF Salmon River
+  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR")) %>%
+  # join tag-specific lgr tag detection rates
+  left_join(lgr_tag_exp, by = c("tag_code" = "tag")) %>%
+  group_by(mark_site,
+           mark_rear_type_name,
+           rel_site,
+           rel_year,
+           ocean_age,
+           sby_c,
+           exp_rate,
+           flags,
+           node) %>%
+  summarise(n = n_distinct(tag_code),
+            .groups = "drop") %>%
+  # only interested in fish tagged at LGR or hatchery releases from MCCA sites in SF Salmon
+  filter(mark_site %in% c("LGRLDR", "MCCA")) %>%
+  mutate(rel_group = case_when(
+    rel_site == "KNOXB" & str_detect(flags, "AI")     ~ "McCall - Integrated",
+    rel_site == "KNOXB" & str_detect(flags, "AD")     ~ "McCall - Segregated",
+    rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "LGR - NOR",
+    rel_site == "LGRLDR" & str_detect(flags, "CW")    ~ "LGR - HOR",
+    #rel_site == "KNOXB"  & mark_rear_type_name == "W" ~ "KNOXB - NOR",
+    #rel_site == "SFSRKT" & mark_rear_type_name == "W" ~ "SFSRKT - NOR",
+    TRUE ~ NA
+  )) %>%
+  group_by(rel_group,
+           rel_year,
+           ocean_age,
+           sby_c,
+           exp_rate,
+           node) %>%
+  summarize(n_tags = sum(n),
+            .groups = "drop") %>%
+  arrange(rel_group,
+          rel_year,
+          node) %>%
+  # join bon group mark rates (back-up)
+  left_join(bon_exp_rates %>%
+              select(rel_group,
+                     rel_year,
+                     ral_exp_rate),
+            by = c("rel_group", "rel_year")) %>%
+  # lgr expansion rate
+  mutate(exp_rate = case_when(
+    str_detect(rel_group, "LGR - NOR") ~ 1 / lgr_trap_rate,                            # the LGR sample rate
+    str_detect(rel_group, "LGR - HOR") ~ 1 / (lgr_trap_rate * lgr_hor_subsample_rate),
+    is.na(exp_rate) ~ ral_exp_rate,                                                    # if not lgr expansion rate, use bon rate
+    TRUE ~ exp_rate
+  )) %>%
+  select(-ral_exp_rate) %>%
+  mutate(n_tags_exp = round(n_tags * exp_rate))
+
+```
+
+```{r tag-exp-mark-rate}
+tag_exp = tag_df %>%
+  # mutate(exp_rate = case_when(
+  #   str_detect(rel_group, "LGR - NOR") ~ 1 / lgr_trap_rate,                            # the LGR sample rate
+  #   str_detect(rel_group, "LGR - HOR") ~ 1 / (lgr_trap_rate * lgr_hor_subsample_rate),
+  #   is.na(exp_rate) ~ ral_exp_rate,                                                    # if not lgr expansion rate, use bon rate
+  #   TRUE ~ exp_rate
+  # )) %>%
+  group_by(rel_group,
+           rel_year,
+           ocean_age,
+           node) %>%
+  summarise(n_tags = sum(n_tags, na.rm = T),
+            n_tags_exp = sum(n_tags_exp, na.rm = T),
+            .groups = "drop")
+
+```
+
+```{r det-probs, results = "hide"}
+# calculate detection probabilities
+library(PITcleanr)
+load(here("data/configuration_files/site_config_LGR_20250416.rda")) ; rm(flowlines, sr_site_pops)
+
+node_paths = addParentChildNodes(parent_child, configuration) %>%
+  buildNodeOrder()
+
+# calculate node detection efficiencies for all spawn years
+node_eff = sfsr_obs_yr %>%
+  #group_by(spawn_year) %>%
+  do(estNodeEff(capHist_proc = ., 
+                node_order = node_paths)) %>%
+  ungroup() %>%
+  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR"))
+
+```
+
+```{r tag-exp-det-prob}
+# expand estimates by site detection probabilities
+exp_summ = tag_exp %>%
+  filter(str_detect(rel_group, "McCall") | str_detect(rel_group, "LGR")) %>%
+  # can't use tagging of ad-clipped adults at LGR i.e., exclude them... would be additive to juvenile releases
+  filter(rel_group != "LGR - HOR") %>%
+  left_join(node_eff %>%
+              #filter(spawn_year == yr) %>%
+              select(node, 
+                     eff_est, 
+                     eff_se)) %>%
+  mutate(tot_est = round(n_tags_exp / eff_est)) %>%
+  filter(node != "KRS_U") %>%
+  # parse by adults vs. jacks
+  mutate(age = case_when(
+    str_detect(rel_group, "LGR")        ~ "All",
+    ocean_age == "2" | ocean_age == "3" ~ "Adults",
+    ocean_age == "1"                    ~ "Jacks",
+    TRUE ~ NA
+  )) %>%
+  group_by(rel_group,
+           age,
+           node,
+           eff_est,
+           eff_se) %>%
+  summarize(n_tags = sum(n_tags),
+            n_tags_exp = sum(n_tags_exp),
+            tot_est = sum(tot_est),
+            .groups = "drop") %>%
+  select(rel_group,
+         age,
+         node,
+         n_tags,
+         n_tags_exp,
+         eff_est,
+         eff_se,
+         tot_est) %>%
+  arrange(rel_group,
+          desc(node),
+          age)
+
+```
+
+**Data Last Queried:** `r as.POSIXct(dt_tm, format = "%Y-%m-%d_%H-%M-%S") %>% format("%B %d, %Y %I:%M%p")`
+
+PIT tag observations were queried from DART at the above date and time and summarized by release group, release year, and sort-by-code designation (i.e., run-at-large [RAL] versus return-to-river) to determine the number of tags observed at the South Fork Guard Station (SFG) and Krassel (KRS) arrays on the South Fork Salmon River (Table \@ref(tab:tag-tbl)). The number of tags observed were then expanded based on expansion rates (inverse of mark rates). For in-season escapement estimates, we focus on natural-origin adults tagged at Lower Granite Dam (LGR) and juvenile hatchery releases to the South Fork Salmon River. For hatchery releases, expansion rates were derived from the **PIT Data** tab in "2025 PIT_Tag_Analysis_LowerGranite.xlsx". Natural-origin expansion rates were assumed to be `r 1/lgr_trap_rate` based on the set trapping and tagging rate at LGR (`r lgr_trap_rate * 100`%).
+
+```{r tag-tbl, tab.cap = "PIT tags detected at the SFG and KRS sites by release group, release year, and sort-by-code designation including expansion rates and an estimate of the number of adults at each array, **not accounting for site detection probability.**"}
+tag_tbl = tag_df %>%
+  filter(rel_group != "LGR - HOR",
+         node %in% c("SFG", "KRS_D")) %>%
+  select(rel_group,
+         rel_year,
+         sby_c,
+         node,
+         n_tags,
+         exp_rate,
+         n_tags_exp) %>%
+  arrange(rel_group,
+          desc(node)) %>%
+  rename(`Release Group` = rel_group,
+         `Release Year` = rel_year,
+         `Sort-By-Code` = sby_c,
+         Array = node,
+         `Tags Observed` = n_tags,
+         `Expansion Rate` = exp_rate,
+         `Mark Rate Expanded` = n_tags_exp) %>%
+  kable(booktabs = T,
+        align = "ccccccc",
+        label = NA) %>%
+  kable_styling(full_width = F,
+                position = "center",
+                bootstrap_options = c("striped", "condensed"))
+tag_tbl
+
+```
+
+To estimate the number of adults past each array, we summarized the above by release group and age (i.e., adults versus jacks) and further accounted for array detection efficiencies (Table \@ref(tab:results-tbl)). Array detection efficiencies were estimated as the percent of tags detected at upstream array(s) that were detected at the given array.
+
+```{r results-tbl, tab.cap = "Estimated number of adults past each array by release group and age after expanding by mark rates and array detection efficiencies."}
+results_tbl = exp_summ %>%
+  select(-eff_se) %>%
+  mutate(eff_est = round(eff_est * 100)) %>%
+  rename(`Release Group` = rel_group,
+         Age = age,
+         Array = node,
+         `Tags Observed` = n_tags,
+         `Mark Rate Expanded` = n_tags_exp,
+         `Array Det Eff` = eff_est,
+         `Est. Adults` = tot_est) %>%
+  kable(booktabs = T,
+        align = "ccccccc",
+        label = NA) %>%
+  kable_styling(full_width = F,
+                position = "center",
+                bootstrap_options = c("striped", "condensed"))
+results_tbl
+
+```

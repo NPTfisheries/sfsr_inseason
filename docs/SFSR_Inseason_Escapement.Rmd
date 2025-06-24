@@ -7,7 +7,7 @@ author:
     correspondence: yes
 
   - name: "Ryan N. Kinzer"
-    affiliation: "Fisheries Data Analyst and Coordinator"
+    affiliation: "Fisheries Data Analysis Coordinator"
 
   - name: "Jason Vogel"
     affiliation: "Research Division Director"
@@ -134,7 +134,7 @@ tag_df = sfsr_obs_yr %>%
   filter(min_det == min(min_det)) %>%
   ungroup() %>%
   # keep just detections within mainsten SF Salmon River
-  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR")) %>%
+  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR", "ESS_D", "ESS_U", "ZEN_D", "ZEN_U")) %>%
   # join tag-specific lgr tag detection rates
   left_join(lgr_tag_exp, by = c("tag_code" = "tag")) %>%
   group_by(mark_site,
@@ -220,7 +220,7 @@ node_eff = sfsr_obs_yr %>%
   do(estNodeEff(capHist_proc = ., 
                 node_order = node_paths)) %>%
   ungroup() %>%
-  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR"))
+  filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR", "ESS_D", "ESS_U", "ZEN_D", "ZEN_D"))
 
 ```
 
@@ -236,7 +236,7 @@ exp_summ = tag_exp %>%
                      eff_est, 
                      eff_se)) %>%
   mutate(tot_est = round(n_tags_exp / eff_est)) %>%
-  filter(node != "KRS_U") %>%
+  filter(!(node %in% c("KRS_U", "ESS_U", "ZEN_U"))) %>%
   # parse by adults vs. jacks
   mutate(age = case_when(
     str_detect(rel_group, "LGR")        ~ "All",
@@ -269,12 +269,37 @@ exp_summ = tag_exp %>%
 
 **Data Last Queried:** `r as.POSIXct(dt_tm, format = "%Y-%m-%d_%H-%M-%S") %>% format("%B %d, %Y %I:%M%p")`
 
+To estimate the number of adults past each array (Table \@ref(tab:results-tbl)), we summarized the expanded counts, based on sort-by-code designation in Table \@ref(tab:tag-tbl), by release group and age (i.e., adults versus jacks) and further accounted for array detection efficiencies. Array detection efficiencies were estimated as the percent of tags detected at upstream array(s) that were detected at the given array.
+
 PIT tag observations were queried from DART at the above date and time and summarized by release group, release year, and sort-by-code designation (i.e., run-at-large [RAL] versus return-to-river) to determine the number of tags observed at the South Fork Guard Station (SFG) and Krassel (KRS) arrays on the South Fork Salmon River (Table \@ref(tab:tag-tbl)). The number of tags observed were then expanded based on expansion rates (inverse of mark rates). For in-season escapement estimates, we focus on natural-origin adults tagged at Lower Granite Dam (LGR) and juvenile hatchery releases to the South Fork Salmon River. For hatchery releases, expansion rates were derived from the **PIT Data** tab in "2025 PIT_Tag_Analysis_LowerGranite.xlsx". Natural-origin expansion rates were assumed to be `r 1/lgr_trap_rate` based on the set trapping and tagging rate at LGR (`r lgr_trap_rate * 100`%).
+
+
+```{r results-tbl, tab.cap = "Estimated number of adults past each array by release group and age after expanding by mark rates and array detection efficiencies."}
+results_tbl = exp_summ %>%
+  select(-eff_se) %>%
+  mutate(eff_est = round(eff_est * 100)) %>%
+  rename(`Release Group` = rel_group,
+         Age = age,
+         Array = node,
+         `Tags Observed` = n_tags,
+         `Mark Rate Expanded` = n_tags_exp,
+         `Array Det Eff` = eff_est,
+         `Est. Adults` = tot_est) %>%
+  kable(booktabs = T,
+        align = "ccccccc",
+        label = NA) %>%
+  kable_styling(full_width = F,
+                position = "center",
+                bootstrap_options = c("striped", "condensed"))
+results_tbl
+
+```
+
 
 ```{r tag-tbl, tab.cap = "PIT tags detected at the SFG and KRS sites by release group, release year, and sort-by-code designation including expansion rates and an estimate of the number of adults at each array, **not accounting for site detection probability.**"}
 tag_tbl = tag_df %>%
-  filter(rel_group != "LGR - HOR",
-         node %in% c("SFG", "KRS_D")) %>%
+  filter(rel_group != "LGR - HOR") %>%
+  filter(node %in% c("SFG", "KRS_D", "ZEN_D", "ESS_D")) %>%
   select(rel_group,
          rel_year,
          sby_c,
@@ -301,25 +326,5 @@ tag_tbl
 
 ```
 
-To estimate the number of adults past each array, we summarized the above by release group and age (i.e., adults versus jacks) and further accounted for array detection efficiencies (Table \@ref(tab:results-tbl)). Array detection efficiencies were estimated as the percent of tags detected at upstream array(s) that were detected at the given array.
 
-```{r results-tbl, tab.cap = "Estimated number of adults past each array by release group and age after expanding by mark rates and array detection efficiencies."}
-results_tbl = exp_summ %>%
-  select(-eff_se) %>%
-  mutate(eff_est = round(eff_est * 100)) %>%
-  rename(`Release Group` = rel_group,
-         Age = age,
-         Array = node,
-         `Tags Observed` = n_tags,
-         `Mark Rate Expanded` = n_tags_exp,
-         `Array Det Eff` = eff_est,
-         `Est. Adults` = tot_est) %>%
-  kable(booktabs = T,
-        align = "ccccccc",
-        label = NA) %>%
-  kable_styling(full_width = F,
-                position = "center",
-                bootstrap_options = c("striped", "condensed"))
-results_tbl
 
-```

@@ -21,7 +21,7 @@ load(here("data/configuration_files/site_config_LGR_20240304.rda"))
 rm(flowlines, node_paths, parent_child, pc_nodes, sites_sf)
 
 # which spawn years to query
-yrs = 2025
+yrs = 2010:2025
 
 # create list of DART observations, by spawn year, compressed
 dart_obs_ls = map(.x = yrs,

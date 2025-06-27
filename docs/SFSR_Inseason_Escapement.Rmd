@@ -39,11 +39,11 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   warning = FALSE,
   message = FALSE,
-  echo = FALSE,
-  comment = "#>",
-  fig.path = "../figures/",
-  dev = c("pdf", "png", "tiff"),
-  dpi = 400
+  echo = FALSE
+  # comment = "#>",
+  # fig.path = "../figures/",
+  # dev = c("pdf", "png", "tiff"),
+  # dpi = 400
 )
 
 ```
@@ -83,7 +83,7 @@ load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
 
 # filter to year of interest
 sfsr_obs_yr = sfsr_obs %>%
-  filter(spawn_year == yr) ; rm(sfsr_obs)
+  filter(spawn_year == yr)
 
 # load lgr tag expansion data, the preferred option, for current year
 lgr_tag_exp = read_excel(path = lgr_mark_filepath,
@@ -154,7 +154,7 @@ tag_df = sfsr_obs_yr %>%
     rel_site == "KNOXB" & str_detect(flags, "AI")     ~ "McCall - Integrated",
     rel_site == "KNOXB" & str_detect(flags, "AD")     ~ "McCall - Segregated",
     rel_site == "LGRLDR" & mark_rear_type_name == "W" ~ "LGR - NOR",
-    rel_site == "LGRLDR" & str_detect(flags, "CW")    ~ "LGR - HOR",
+    rel_site == "LGRLDR" & str_detect(flags, "CW")    ~ "LGR - HOR (AD-intact, CWT)",
     #rel_site == "KNOXB"  & mark_rear_type_name == "W" ~ "KNOXB - NOR",
     #rel_site == "SFSRKT" & mark_rear_type_name == "W" ~ "SFSRKT - NOR",
     TRUE ~ NA
@@ -179,7 +179,7 @@ tag_df = sfsr_obs_yr %>%
   # lgr expansion rate
   mutate(exp_rate = case_when(
     str_detect(rel_group, "LGR - NOR") ~ 1 / lgr_trap_rate,                            # the LGR sample rate
-    str_detect(rel_group, "LGR - HOR") ~ 1 / lgr_trap_rate, # * lgr_hor_subsample_rate),
+    str_detect(rel_group, fixed("LGR - HOR (AD-intact, CWT)")) ~ 1 / lgr_trap_rate, # * lgr_hor_subsample_rate),
     is.na(exp_rate) ~ ral_exp_rate,                                                    # if not lgr expansion rate, use bon rate
     TRUE ~ exp_rate
   )) %>%
@@ -192,7 +192,7 @@ tag_df = sfsr_obs_yr %>%
 tag_exp = tag_df %>%
   # mutate(exp_rate = case_when(
   #   str_detect(rel_group, "LGR - NOR") ~ 1 / lgr_trap_rate,                            # the LGR sample rate
-  #   str_detect(rel_group, "LGR - HOR") ~ 1 / (lgr_trap_rate * lgr_hor_subsample_rate),
+  #   str_detect(rel_group, fixed("LGR - HOR (AD-intact, CWT)) ~ 1 / (lgr_trap_rate * lgr_hor_subsample_rate),
   #   is.na(exp_rate) ~ ral_exp_rate,                                                    # if not lgr expansion rate, use bon rate
   #   TRUE ~ exp_rate
   # )) %>%
@@ -229,7 +229,7 @@ node_eff = sfsr_obs_yr %>%
 exp_summ = tag_exp %>%
   filter(str_detect(rel_group, "McCall") | str_detect(rel_group, "LGR")) %>%
   # can't use tagging of ad-clipped adults at LGR i.e., exclude them... would be additive to juvenile releases
-  #filter(rel_group != "LGR - HOR") %>%
+  #filter(rel_group != "LGR - HOR (AD-intact, CWT)") %>%
   left_join(node_eff %>%
               #filter(spawn_year == yr) %>%
               select(node, 
@@ -296,9 +296,71 @@ results_tbl
 ```
 
 
+```{r run-timing-calcs}
+sfsr_fish <- sfsr_obs %>%
+  filter(mark_site %in% c('LGRLDR', 'MCCA')) %>%
+  filter(rel_site %in% c('LGRLDR', 'KNOXB')) %>%
+  mutate(julian = lubridate::mdy(paste0(format(min_det, format = '%m-%d'), '-2020'))) %>%
+  mutate(group = case_when(
+    mark_site == 'MCCA' & grepl('AD', flags) ~ 'Segregated',
+    mark_site == 'MCCA' & grepl('CW||AI', flags) ~ 'Integregated',
+    mark_site == 'LGRLDR' & mark_rear_type_name != 'H' ~ 'Natural',
+    TRUE ~ NA
+  ))
+
+obs <- sfsr_fish %>%
+  filter(group != 'other') %>%
+  filter(node %in% c('SFG', 'KRS', 'KRS_D', 'ZEN_D', 'ESS_D')) %>%
+  mutate(node = ifelse(node == 'KRS', 'KRS_D', node)) %>%
+  group_by(node, tag_code) %>%
+  slice_min(min_det)
+
+# check run-timing by group - not a big difference
+obs_sum <- obs %>%
+  group_by(node, spawn_year, julian) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  complete(node, spawn_year, julian, fill = list(n=0)) %>%
+  group_by(node, spawn_year) %>%
+  mutate(csum = cumsum(n),
+         cdf = csum/sum(n)) %>%
+  ungroup()
+
+today = lubridate::mdy(paste0(format(Sys.Date(), format = '%m-%d'), '-2020'))
+
+avg_run <- obs_sum %>%
+  filter(spawn_year != yr) %>%
+  group_by(node, julian) %>%
+  summarise(cdf = mean(cdf, na.rm = TRUE))
+
+p <- obs_sum %>%
+  filter(julian == today) %>%
+  group_by(node) %>%
+  summarise(cdf = mean(cdf))
+
+# avg_run %>%
+#   filter(julian == today)
+```
+
+
+```{r run-timing, fig.align='center', fig.cap = "Run-timing of hatchery (segregated and integrated) and natural origin returns across South Fork Salmon River PIT-arrays. The grey lines indicate individual spawn year returns for 2010-2024, the dark blue line is the average cumulative proportion of returns, and the green line represents the current 2025 return."}
+
+ggplot() +
+    geom_line(data = obs_sum %>% filter(spawn_year != yr), aes(x = julian, y = cdf, group = spawn_year), colour = 'grey') +
+    geom_line(data = avg_run, aes(x = julian, y = cdf), colour = 'navy', size = 1) +
+    geom_line(data = obs_sum %>% filter(spawn_year == yr), aes(x = julian, y = cdf), colour = 'limegreen') +
+    #geom_hline(xintercept = julian, colour = 'firebrick') +
+    scale_x_date(date_breaks = '2 weeks', date_labels = "%b-%d") +
+    facet_wrap(~fct_rev(node), ncol = 1) +
+  theme_bw() +
+  labs(x = 'Date',
+       y = 'CDF')
+```
+
+
 ```{r tag-tbl, tab.cap = "PIT tags detected at the SFG and KRS sites by release group, release year, and sort-by-code designation including expansion rates and an estimate of the number of adults at each array, **not accounting for site detection probability.**"}
 tag_tbl = tag_df %>%
-  #filter(rel_group != "LGR - HOR") %>%
+  #filter(rel_group != "LGR - HOR (AD-intact, CWT)") %>%
   filter(node %in% c("SFG", "KRS_D", "ZEN_D", "ESS_D")) %>%
   select(rel_group,
          rel_year,
@@ -325,6 +387,3 @@ tag_tbl = tag_df %>%
 tag_tbl
 
 ```
-
-
-

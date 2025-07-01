@@ -127,6 +127,7 @@ tag_df = sfsr_obs_yr %>%
          mark_rear_type_name,
          rel_site,
          rel_date,
+         length,
          flags) %>%
   mutate(rel_year = year(rel_date)) %>%
   # for any tag that was observed at a node multiple times, just keep the first detection
@@ -137,6 +138,11 @@ tag_df = sfsr_obs_yr %>%
   filter(node %in% c("SFG", "KRS_D", "KRS_U", "STR", "ESS_D", "ESS_U", "ZEN_D", "ZEN_U")) %>%
   # join tag-specific lgr tag detection rates
   left_join(lgr_tag_exp, by = c("tag_code" = "tag")) %>%
+  mutate(ocean_age = case_when(
+    rel_site == 'LGRLDR' & length < 600 ~ 1,
+    rel_site == 'LGRLDR' & length < 815 ~ 2,
+    rel_site == 'LGRLDR' & length >= 815 ~ 3,
+    TRUE ~ ocean_age)) %>%
   group_by(mark_site,
            mark_rear_type_name,
            rel_site,
@@ -239,7 +245,7 @@ exp_summ = tag_exp %>%
   filter(!(node %in% c("KRS_U", "ESS_U", "ZEN_U"))) %>%
   # parse by adults vs. jacks
   mutate(age = case_when(
-    str_detect(rel_group, "LGR")        ~ "All",
+    #str_detect(rel_group, "LGR")        ~ "All",
     ocean_age == "2" | ocean_age == "3" ~ "Adults",
     ocean_age == "1"                    ~ "Jacks",
     TRUE ~ NA
@@ -276,6 +282,8 @@ PIT tag observations were queried from DART at the above date and time and summa
 
 ```{r results-tbl, tab.cap = "Estimated number of adults past each array by release group and age after expanding by mark rates and array detection efficiencies."}
 results_tbl = exp_summ %>%
+  filter(age == 'Adults') %>%
+  mutate(node = factor(node, levels = c('SFG','KRS_D', 'ZEN_D', 'ESS_D'))) %>%
   select(-eff_se) %>%
   mutate(eff_est = round(eff_est * 100)) %>%
   rename(`Release Group` = rel_group,

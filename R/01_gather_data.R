@@ -49,6 +49,7 @@ mark_data = dart_obs %>%
          contains('mark_'),
          contains('event_'),
          contains('rel_'),
+         length,
          flags) %>%
   select(-event_type_name) %>%
   distinct(tag_code,

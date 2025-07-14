@@ -20,7 +20,7 @@ library(janitor)
 load(here("data/configuration_files/site_config_LGR_20240304.rda"))
 rm(flowlines, node_paths, parent_child, pc_nodes, sites_sf)
 
-# which spawn years to query
+# which spawn year(s) to query
 yrs = 2010:2025
 
 # create list of DART observations, by spawn year, compressed
@@ -37,8 +37,8 @@ names(dart_obs_ls) = yrs
 
 # extract the named data frame from the list of lists
 dart_obs = dart_obs_ls %>%
-  map_dfr(. %>% 
-            pluck("dart_obs") %>% 
+  map_dfr(. %>%
+            pluck("dart_obs") %>%
             mutate(trans_status = as.character(trans_status)), .id = "spawn_year")
 
 # extract mark data

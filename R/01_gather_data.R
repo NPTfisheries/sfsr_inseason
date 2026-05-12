@@ -1,10 +1,10 @@
-# Purpose: Compile data for SF Salmon River Chinook salmon to calculate
-# in-season escapement estimates by origin, release group and year.
+# Purpose: Retrieve data for SF Salmon River Chinook salmon to calculate
+#   in-season escapement estimates by origin, release group and year.
 #
 # Authors: Mike Ackerman and Ryan N. Kinzer 
 # 
 # Created: July 17, 2023
-#   Modified: June 30, 2025
+#   Last Modified: May 12, 2026
 
 # clear environment
 rm(list = ls())
@@ -13,15 +13,13 @@ rm(list = ls())
 library(tidyverse)
 #remotes::install_github("mackerman44/PITcleanr", ref = "npt_dev")
 library(PITcleanr)
-library(here)
-library(janitor)
 
 # load configuration file
-load(here("data/configuration_files/site_config_LGR_20240304.rda"))
-rm(flowlines, node_paths, parent_child, pc_nodes, sites_sf)
+load("data/configuration_files/site_config_LGR_20260116.rda")
+rm(crb_sites_sf, flowlines, parent_child, sr_site_pops)
 
 # which spawn year(s) to query
-yrs = 2010:2025
+yrs = 2010:2026
 
 # create list of DART observations, by spawn year, compressed
 dart_obs_ls = map(.x = yrs,
@@ -36,13 +34,13 @@ dart_obs_ls = map(.x = yrs,
 names(dart_obs_ls) = yrs
 
 # extract the named data frame from the list of lists
-dart_obs = dart_obs_ls %>%
+dart_obs_df = dart_obs_ls %>%
   map_dfr(. %>%
             pluck("dart_obs") %>%
             mutate(trans_status = as.character(trans_status)), .id = "spawn_year")
 
 # extract mark data
-mark_data = dart_obs %>%
+mark_df = dart_obs_df %>%
   #filter(event_type_name == 'Mark') %>% wasn't getting every tag for some reason
   select(tag_code,
          file_id,
@@ -56,11 +54,11 @@ mark_data = dart_obs %>%
            .keep_all = TRUE)
 
 # compile compressed obs and join the mark data
-compress_obs = dart_obs_ls %>%
+compress_df = dart_obs_ls %>%
   map_dfr(. %>% 
             pluck("compress_obs"),
           .id = 'spawn_year') %>%
-  left_join(mark_data)
+  left_join(mark_df)
 
 # nodes of interest in south fork salmon river
 sfsr_nodes = c("ESS_D", "ESS_U", "JOHNSC",       # East Fork South Fork Salmon
@@ -69,7 +67,7 @@ sfsr_nodes = c("ESS_D", "ESS_U", "JOHNSC",       # East Fork South Fork Salmon
                "KNOXB", "MCCA", "SALSFW", "STR") # South Fork Salmon weir and MRR sites
 
 # trim down to just tags observed within the sfsr, all years
-sfsr_obs = compress_obs %>%
+sfsr_compress_df = compress_df %>%
   group_by(tag_code) %>%
   filter(any(node %in% sfsr_nodes)) %>%
   ungroup() %>%
@@ -80,7 +78,7 @@ sfsr_obs = compress_obs %>%
 
 # write out objects for analysis
 save(dart_obs_ls,
-     sfsr_obs,
-     file = paste0(here("data/observations/sfsr_obs_"), format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".rda"))
+     sfsr_compress_df,
+     file = paste0("data/observations/sfsr_obs_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".rda"))
 
 # END SCRIPT

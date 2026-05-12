@@ -1,12 +1,12 @@
 ---
 title: "In-season Escapement Estimates to the SFG and KRS PIT-tag Arrays in the South Fork Salmon River"
 author:
-  - name: "Michael W. Ackerman"
+  - name: "Mike Ackerman"
     email: mikea@nezperce.org
     affiliation: "Research Scientist"
     correspondence: yes
 
-  - name: "Ryan N. Kinzer"
+  - name: "Ryan Kinzer"
     affiliation: "Fisheries Data Analysis Coordinator"
 
   - name: "Jason Vogel"
@@ -54,18 +54,18 @@ library(kableExtra)
 
 # load necessary libraries
 library(tidyverse)
-library(here)
 library(readxl)
+library(here)
 library(janitor)
 
 ```
 
 ```{r set-parameters}
-yr = 2025                                                 # current year
-lgr_trap_rate = 0.20                                      # set and assumed lgr trapping and tagging rate
-lgr_hor_subsample_rate = 0.25
-lgr_mark_filepath = here("data/mark_rates/2025 PIT_Tag_Analysis_LowerGranite.xlsx")  # path to lgr tag-specific expansion data
-bon_exp_filepath  = here("data/mark_rates/2025 PIT_Tag_Analysis_Bonneville.xlsx")    # path to past bon expansion rates (backup option)
+yr                     = 2025                                       # current year
+lgr_trap_rate          = 0.186                                      # set assumed lgr trapping and tagging rate
+lgr_hor_subsample_rate = 0.33
+lgr_mark_filepath = here("data/mark_rates/2026 PIT_Tag_Analysis_LowerGranite.xlsx")  # path to lgr tag-specific expansion data
+bon_exp_filepath  = here("data/mark_rates/2026 PIT_Tag_Analysis_Bonneville.xlsx")    # path to past bon expansion rates (backup option)
 
 ```
 
@@ -82,7 +82,7 @@ dt_tm = list.files(path = here("data/observations/"),
 load(paste0(here("data/observations/sfsr_obs_"), dt_tm, ".rda"))
 
 # filter to year of interest
-sfsr_obs_yr = sfsr_obs %>%
+sfsr_compress_yr = sfsr_compress_df %>%
   filter(spawn_year == yr)
 
 # load lgr tag expansion data, the preferred option, for current year
@@ -115,19 +115,19 @@ bon_exp_rates = read_excel(path = bon_exp_filepath,
 ```
 
 ```{r krs-only}
-jack_cutoff <- 580
-krs <- sfsr_obs_yr %>%
+jack_cutoff = 580
+krs = sfsr_compress_yr %>%
   filter(node %in% c('KRS_D', 'KRS_U')) %>%
   filter(rel_site == 'LGRLDR') %>%
   mutate(age = ifelse(length < jack_cutoff, 'jack', 'adult')) %>%
   group_by(age) %>%
   summarize(n = n_distinct(tag_code))
-```
 
+```
 
 ```{r prep-data}
 # summarize tags by release group, release year, and site code (node)
-tag_df = sfsr_obs_yr %>%
+tag_df = sfsr_compress_yr %>%
   select(spawn_year,
          tag_code,
          node,
@@ -151,8 +151,8 @@ tag_df = sfsr_obs_yr %>%
   left_join(lgr_tag_exp, by = c("tag_code" = "tag")) %>%
   mutate(ocean_age = case_when(
     rel_site == 'LGRLDR' & length < jack_cutoff ~ 1,
-    rel_site == 'LGRLDR' & length < 815 ~ 2,
-    rel_site == 'LGRLDR' & length >= 815 ~ 3,
+    rel_site == 'LGRLDR' & length < 815         ~ 2,
+    rel_site == 'LGRLDR' & length >= 815        ~ 3,
     TRUE ~ ocean_age)) %>%
   group_by(mark_site,
            mark_rear_type_name,
@@ -226,13 +226,13 @@ tag_exp = tag_df %>%
 ```{r det-probs, results = "hide"}
 # calculate detection probabilities
 library(PITcleanr)
-load(here("data/configuration_files/site_config_LGR_20250416.rda")) ; rm(flowlines, sr_site_pops)
+load(here("data/configuration_files/site_config_LGR_20260116.rda")) ; rm(flowlines, sr_site_pops)
 
 node_paths = addParentChildNodes(parent_child, configuration) %>%
   buildNodeOrder()
 
 # calculate node detection efficiencies for all spawn years
-node_eff = sfsr_obs_yr %>%
+node_eff = sfsr_compress_yr %>%
   #group_by(spawn_year) %>%
   do(estNodeEff(capHist_proc = ., 
                 node_order = node_paths)) %>%
@@ -316,9 +316,8 @@ results_tbl
 
 ```
 
-
 ```{r run-timing-calcs}
-sfsr_fish <- sfsr_obs %>%
+sfsr_fish = sfsr_compress_df %>%
   filter(mark_site %in% c('LGRLDR', 'MCCA')) %>%
   filter(rel_site %in% c('LGRLDR', 'KNOXB')) %>%
   mutate(julian = lubridate::mdy(paste0(format(min_det, format = '%m-%d'), '-2020'))) %>%
@@ -333,8 +332,7 @@ sfsr_fish <- sfsr_obs %>%
     TRUE ~ 'other'
   ))
 
-
-obs <- sfsr_fish %>%
+obs = sfsr_fish %>%
   filter(rel_group != 'other') %>%
   filter(node %in% c('SFG', 'KRS', 'KRS_D')) %>%
   mutate(node = ifelse(node == 'KRS', 'KRS_D', node)) %>%
@@ -342,7 +340,7 @@ obs <- sfsr_fish %>%
   slice_min(min_det)
 
 # check run-timing by group - not a big difference
-obs_sum <- obs %>%
+obs_sum = obs %>%
   group_by(rel_group, node, spawn_year, julian) %>%
   summarise(n = n()) %>%
   ungroup() %>%
@@ -354,12 +352,12 @@ obs_sum <- obs %>%
 
 today = lubridate::mdy(paste0(format(Sys.Date(), format = '%m-%d'), '-2020'))
 
-avg_run <- obs_sum %>%
+avg_run = obs_sum %>%
   filter(spawn_year != yr) %>%
   group_by(rel_group, node, julian) %>%
   summarise(cdf = mean(cdf, na.rm = TRUE))
 
-p <- obs_sum %>%
+p = obs_sum %>%
   filter(julian == today) %>%
   group_by(rel_group, node) %>%
   summarise(cdf = mean(cdf))
@@ -368,8 +366,7 @@ p <- obs_sum %>%
 #   filter(julian == today)
 ```
 
-
-```{r run-timing, fig.align='center', fig.cap = "Run-timing of hatchery (segregated and integrated) and unclipped returns of LGRLDR released tags across South Fork Salmon River PIT-arrays. The grey lines indicate individual spawn year returns for 2010-2024, the dark blue line is the average cumulative proportion of returns, and the green line represents the current 2025 return."}
+```{r run-timing, fig.align = 'center', fig.cap = "Run-timing of hatchery (segregated and integrated) and unclipped returns of LGRLDR released tags across South Fork Salmon River PIT-arrays. The grey lines indicate individual spawn year returns for 2010-2024, the dark blue line is the average cumulative proportion of returns, and the green line represents the current 2025 return."}
 
 ggplot() +
     geom_line(data = obs_sum %>% filter(spawn_year != yr), aes(x = julian, y = cdf, group = spawn_year), colour = 'grey') +
@@ -381,9 +378,10 @@ ggplot() +
   theme_bw() +
   labs(x = 'Date',
        y = 'CDF')
+
 ```
 
-```{r run-timing-year, fig.align='center', fig.height=9, fig.cap = "Run-timing of hatchery (segregated and integrated) and unclipped returns of LGRLDR released tags across South Fork Salmon River PIT-arrays. The vertical red line indicates the last data download."}
+```{r run-timing-year, fig.align = 'center', fig.height = 9, fig.cap = "Run-timing of hatchery (segregated and integrated) and unclipped returns of LGRLDR released tags across South Fork Salmon River PIT-arrays. The vertical red line indicates the last data download."}
 ggplot() +
     stat_ecdf(data = obs, aes(x = julian, colour = rel_group), size = 1) +
     geom_vline(xintercept = today, colour = 'firebrick') +
@@ -394,6 +392,7 @@ ggplot() +
   labs(x = 'Date',
        y = 'CDF',
        colour = '')
+
 ```
 
 ```{r tag-tbl, tab.cap = "PIT tags detected at the SFG and KRS sites by release group, release year, and sort-by-code designation including expansion rates and an estimate of the number of adults at each array, **not accounting for site detection probability.**"}
@@ -422,6 +421,7 @@ tag_tbl = tag_df %>%
   kable_styling(full_width = F,
                 position = "center",
                 bootstrap_options = c("striped", "condensed"))
+
 tag_tbl
 
 ```

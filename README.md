@@ -28,15 +28,18 @@ fisheries management.
 
 - Mike Ackerman  
   Research Scientist  
-  Nez Perce Tribe Fisheries Resources Management Research Division
+  Nez Perce Tribe Fisheries Resources Management  
+  Research Division
 
 - Ryan N. Kinzer  
   Fisheries Data Analysis Coordinator  
-  Nez Perce Tribe Fisheries Resources Management Research Division
+  Nez Perce Tribe Fisheries Resources Management  
+  Research Division
 
 - Jason Vogel  
   Director  
-  Nez Perce Tribe Fisheries Resources Management Research Division
+  Nez Perce Tribe Fisheries Resources Management  
+  Research Division
 
 ## Questions
 

@@ -54,6 +54,7 @@ library(readxl)
 library(here)
 library(janitor)
 library(PITcleanr)
+
 ```
 
 ```{r load-obs-data}
@@ -65,6 +66,7 @@ current_year = year(update_dttm)
 # filter to current_year
 sfsr_comp_obs_df_yr = sfsr_comp_obs_df %>%
   filter(spawn_yr == current_year)
+
 ```
 
 ```{r set-parameters}
@@ -101,6 +103,7 @@ assign_rel_group = function(rel_site,
     TRUE ~ NA_character_
   )
 }
+
 ```
 
 ```{r load-exp-data}
@@ -141,7 +144,7 @@ bon_exp_rates = read_excel(path = bon_exp_filepath,
 
 ```
 
-```{r krs-check}
+```{r krs-check, eval = FALSE}
 krs_check = sfsr_comp_obs_df_yr %>%
   filter(
     node %in% c("KRS_D", "KRS_U"),
@@ -320,7 +323,7 @@ To estimate the number of adults past each array (Table \@ref(tab:results-tbl)),
 
 PIT tag observations were queries from DART at the above date and time and summarized by release group, release year, and sort-by-code-designation (i.e., run-at-large [RAL] versus return-to-river [RTR]) to determine the number of tags observed at the South Fork Guard Station (SFS) and Krassel (KRS) arrays on the South fork Salmon River (Table \@ref(tab:tag-tbl)). The number of tags observed were then expanded based on expansion rate, calculated as the inverse of mark rates. For in-season escapement estimates, we focus on natural-origin adults at Lower Granite Dam and juvenile hatchery releases to the South Fork Salmon River. For hatchery releaseds, expansion rates were derived from the current-year **PIT Data** tab in `r basename(lgr_mark_filepath)`. Natural-origin expansion rates were assumed to be `r round(1 / lgr_trap_rate, 2)` based on the set trapping and tagging rate at LGR (`r round(lgr_trap_rate * 100, 1)`%).
 
-```{r results-tbl, tab.cap = "Estimated number of adults past each array by release group and age after expanding by mark rates and array detection efficiencies."}
+```{r results-tbl, tab.cap = "Estimated number of adults (jacks excluded) past each array by release group after expanding by mark rates and array detection efficiencies."}
 results_tbl = exp_df %>%
   filter(age == "Adults") %>%
   filter(node %in% nodes_report) %>%
@@ -333,7 +336,7 @@ results_tbl = exp_df %>%
     Array = node,
     `Tags Observed` = n_tags,
     `Array Det Eff` = eff_est,
-    `Estimated Tags` = est_tags,
+    `Est. Tags` = est_tags,
     `Est. Adults` = tot_est
   ) %>%
   arrange(`Release Group`, Array, Age) %>%
@@ -412,7 +415,7 @@ run_timing_today = obs_sum %>%
 
 ```
 
-```{r run-timing, fig.align = "center", fig.cap = paste0("Run timing of hatchery integrated, hatchery segregated, and unclipped returns of LGRLDR-released tags across South Fork Salmon River PIT-tag arrays. Grey lines indicate individual spawn year returns before ", current_year, ", the dark blue line is the average cumulative proportion of returns before ", current_year, ", and the green line represents the current ", current_year, " return.")}
+```{r run-timing, fig.align = "center", fig.cap = paste0("Cumulative run timing of hatchery integrated, hatchery segregated, and unclipped returns of LGRLDR-released tags across South Fork Salmon River PIT-tag arrays. Historic returns from 2010 - ", current_year - 1, " (grey) and their average run timing (blue) provide context for the current ", current_year, " return (green). The vertical dashed red line indicates the last data download.")}
 run_time_p = ggplot() +
   geom_line(
     data = obs_sum %>% filter(spawn_yr != current_year),
@@ -450,7 +453,7 @@ run_time_p
 
 ```
 
-```{r run-timing-year, fig.align = "center", fig.height = 9, fig.cap = "Run timing of hatchery integrated, hatchery segregated, and unclipped returns of LGRLDR-released tags across South Fork Salmon River PIT-tag arrays. The vertical red line indicates the last data download."}
+```{r run-timing-year, fig.align = "center", fig.height = 9, fig.cap = paste0("Cumulative run timing of PIT-tagged spring-summer Chinook salmon detected at South Fork Salmon River arrays by spawn year. Curves are shown separately for natural-origin (LGRLDR), hatchery integrated, and hatchery segregated. The vertical dashed red line indicates the last data download.")}
 run_time_yr_p = ggplot() +
   stat_ecdf(
     data = obs,
@@ -497,12 +500,12 @@ tag_tbl = tag_df %>%
     rel_year
   ) %>%
   rename(
-    `Release Group` = rel_group,
-    `Release Year` = rel_year,
-    `Sort-By-Code` = sby_c,
-    Array = node,
-    `Tags Observed` = n_tags,
-    `Expansion Rate` = exp_rate,
+    `Release Group`      = rel_group,
+    `Release Year`       = rel_year,
+    `Sort-By-Code`       = sby_c,
+    Array                = node,
+    `Tags Observed`      = n_tags,
+    `Expansion Rate`     = exp_rate,
     `Mark Rate Expanded` = n_tags_exp
   ) %>%
   kable(
@@ -520,4 +523,5 @@ tag_tbl
 
 ```
 
+***END DOCUMENT***
 <!-- End document -->

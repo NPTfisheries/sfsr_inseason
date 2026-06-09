@@ -490,6 +490,7 @@ tag_tbl = tag_df %>%
     rel_year,
     sby_c,
     node,
+    ocean_age,
     n_tags,
     exp_rate,
     n_tags_exp
@@ -504,6 +505,7 @@ tag_tbl = tag_df %>%
     `Release Year`       = rel_year,
     `Sort-By-Code`       = sby_c,
     Array                = node,
+    `Ocean Age`          = ocean_age,
     `Tags Observed`      = n_tags,
     `Expansion Rate`     = exp_rate,
     `Mark Rate Expanded` = n_tags_exp

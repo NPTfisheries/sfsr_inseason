@@ -72,7 +72,7 @@ sfsr_comp_obs_df_yr = sfsr_comp_obs_df %>%
 ```{r set-parameters}
 # lgr trap and subsample rates
 lgr_trap_rate         = 0.186       # assumed lgr trapping/tagging rate
-lgr_hor_chnk_sub_rate = 0.33333333  # assumed lgr hatchery chinook subsample rate
+#lgr_hor_chnk_sub_rate = 0.33333333  # assumed lgr hatchery chinook subsample rate
 
 # chnk size cutoffs
 jack_cutoff_mm        = 580
@@ -222,7 +222,7 @@ tag_df = sfsr_comp_obs_df_yr %>%
       select(rel_group, rel_year, ral_exp_rate),
     by = c("rel_group", "rel_year")
   ) %>%
-  # apply
+  # apply lgr expansion rate to LGRLDR rel_group
   mutate(
     exp_rate = case_when(
       rel_group == "LGRLDR" ~ 1 / lgr_trap_rate,
@@ -277,19 +277,18 @@ exp_df = tag_exp %>%
   filter(!(node %in% nodes_upstream)) %>%
   mutate(
     age = case_when(
-      ocean_age == 1         ~ "Jacks",
-      ocean_age %in% c(2, 3) ~ "Adults",
-      TRUE                   ~ NA_character_
+      ocean_age == 1            ~ "Jacks",
+      ocean_age %in% c(2, 3, 4) ~ "Adults",
+      TRUE                      ~ NA_character_
     ),
-    est_tags = round(n_tags / eff_est),
+    est_tags = round(n_tags     / eff_est),
     tot_est  = round(n_tags_exp / eff_est)
   ) %>%
   group_by(
     rel_group,
     age,
     node,
-    eff_est,
-    eff_se
+    eff_est
   ) %>%
   summarize(
     n_tags     = sum(n_tags, na.rm = TRUE),
@@ -304,7 +303,6 @@ exp_df = tag_exp %>%
     node,
     n_tags,
     eff_est,
-    eff_se,
     est_tags,
     n_tags_exp,
     tot_est
@@ -323,26 +321,27 @@ To estimate the number of adults past each array (Table \@ref(tab:results-tbl)),
 
 PIT tag observations were queried from DART at the above date and time and summarized by release group, release year, and sort-by-code-designation (i.e., run-at-large [RAL] versus return-to-river [RTR]) to determine the number of tags observed at the South Fork Guard Station (SFS) and Krassel (KRS) arrays on the South Fork Salmon River (Table \@ref(tab:tag-tbl)). The number of tags observed were then expanded based on expansion rate, calculated as the inverse of mark rates. For in-season escapement estimates, we focus on natural-origin adults at Lower Granite Dam and juvenile hatchery releases to the South Fork Salmon River. For hatchery releases, expansion rates were derived from the current-year **PIT Data** tab in `r basename(lgr_mark_filepath)`. Natural-origin expansion rates were assumed to be `r round(1 / lgr_trap_rate, 2)` based on the set trapping and tagging rate at LGR (`r round(lgr_trap_rate * 100, 1)`%).
 
-```{r results-tbl, tab.cap = "Estimated number of adults (jacks excluded) past each array by release group after expanding by mark rates and array detection efficiencies."}
+```{r results-tbl, tab.cap = "Estimated number of adults (jacks excluded) past each array, by release group, after expanding by mark rates and array detection efficiencies."}
 results_tbl = exp_df %>%
   filter(age == "Adults") %>%
   filter(node %in% nodes_report) %>%
   mutate(node = factor(node, levels = nodes_report)) %>%
-  select(-eff_se, -n_tags_exp) %>%
+  select(-n_tags_exp) %>%
   mutate(eff_est = round(eff_est * 100)) %>%
   rename(
-    `Release Group` = rel_group,
-    Age = age,
-    Array = node,
-    `Tags Observed` = n_tags,
-    `Array Det Eff` = eff_est,
-    `Est. Tags` = est_tags,
-    `Est. Adults` = tot_est
+    `Release Group`     = rel_group,
+    Age                 = age,
+    Array               = node,
+    `Tags Observed`     = n_tags,
+    `Array Det Eff (%)` = eff_est,
+    `Est Tags`          = est_tags,
+    `Est Adults`        = tot_est
   ) %>%
   arrange(`Release Group`, Array, Age) %>%
   kable(
     booktabs = TRUE,
-    align = "ccccccc",
+    align = rep("c", ncol(.)),
+    escape = FALSE,
     label = NA
   ) %>%
   kable_styling(
@@ -481,7 +480,7 @@ run_time_yr_p = ggplot() +
 run_time_yr_p
 ```
 
-```{r tag-tbl, tab.cap = "PIT tags detected at South Fork Salmon River arrays by release group, release year, and sort-by-code designation including expansion rates and an estimate of the number of adults at each array, not accounting for array detection probability."}
+```{r tag-tbl, tab.cap = "PIT tags detected at South Fork Salmon River arrays by release group, release year, sort-by-code designation, and ocean age. Expanded estimates of adult escapement at each array were calculated from observed tags and expansion rates but were not adjusted for array detection efficiency."}
 tag_tbl = tag_df %>%
   filter(node %in% nodes_report) %>%
   mutate(node = factor(node, levels = nodes_report)) %>%

@@ -81,8 +81,6 @@ adult_2salt_cutoff_mm = 815
 # paths to mark/expansion rates
 lgr_mark_filepath     = here("data/mark_rates/2026 PIT_Tag_Analysis_LowerGranite.xlsx") # path to lgr tag-specific expansion data
 bon_exp_filepath      = here("data/mark_rates/2026 PIT_Tag_Analysis_Bonneville.xlsx")   # path to past bon expansion rates (backup option)
-# lgr_mark_filepath = here("data/mark_rates/deprecated/2025 PIT_Tag_Analysis_LowerGranite.xlsx") 
-# bon_exp_filepath  = here("data/mark_rates/deprecated/2025 PIT_Tag_Analysis_Bonneville.xlsx")
 
 # array sets
 nodes_all      = c("SFG", "KRS", "KRS_D", "KRS_U", "STR", "ESS_D", "ESS_U", "ZEN_D", "ZEN_U")
@@ -358,7 +356,7 @@ results_tbl
 sfsr_fish = sfsr_comp_obs_df %>%
   filter(
     mark_site %in% c("LGRLDR", "MCCA"),
-    rel_site %in% c("LGRLDR", "KNOXB")
+    rel_site  %in% c("LGRLDR", "KNOXB")
   ) %>%
   mutate(
     node = recode(node, KRS = "KRS_D"),
@@ -444,7 +442,7 @@ run_time_p = ggplot() +
   facet_grid(rel_group ~ fct_rev(node)) +
   theme_bw() +
   labs(
-    x = "Date",
+    x = NULL,
     y = "CDF"
   )
 
@@ -472,12 +470,152 @@ run_time_yr_p = ggplot() +
   theme_bw() +
   theme(legend.position = "top") +
   labs(
-    x = "Date",
+    x = NULL,
     y = "CDF",
     colour = ""
   )
 
 run_time_yr_p
+```
+
+```{r tmp, eval = T, fig.align = "center", fig.height = 9, fig.cap = "Daily counts of PIT-tagged adult Chinook salmon first detected at LGR and South Fork Salmon River IPTDS sites during the current spawn year. Bars show the number of tagged fish first detected each day, stacked by release group. Faint dashed lines and shaded ribbons represent the mean and interquartile range (25th-75th percentile), respectively, for each release group in previous years since 2020. The vertical dashed red line indicates the current date."}
+
+site_levels = c("LGR", "SFG", "KRS", "ESS", "ZEN")
+
+start_date = as.Date("2020-05-10")
+end_date   = as.Date("2020-08-01")
+today_2020 = as.Date(sprintf("2020-%s", format(Sys.Date(), "%m-%d")))
+
+daily_dat = sfsr_fish %>%
+  filter(
+    spawn_yr >= 2020,
+    !is.na(rel_group)
+  ) %>%
+  mutate(
+    julian = as.Date(julian),
+    site = case_when(
+      str_detect(node, "^LGR") ~ "LGR",
+      str_detect(node, "^SFG") ~ "SFG",
+      str_detect(node, "^KRS") ~ "KRS",
+      str_detect(node, "^ESS") ~ "ESS",
+      str_detect(node, "^ZEN") ~ "ZEN",
+      TRUE ~ NA_character_
+    ),
+    site = factor(site, levels = site_levels)
+  ) %>%
+  filter(!is.na(site)) %>%
+  group_by(spawn_yr, tag_code, rel_group, site) %>%
+  summarise(
+    first_det = min(julian, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(
+    first_det >= start_date,
+    first_det <= end_date
+  ) %>%
+  count(spawn_yr, rel_group, site, first_det, name = "n_tags") %>%
+  complete(
+    spawn_yr,
+    site,
+    rel_group,
+    first_det = seq.Date(start_date, end_date, by = "day"),
+    fill = list(n_tags = 0)
+  )
+
+hist_dat = daily_dat %>%
+  filter(spawn_yr != current_year) %>%
+  group_by(rel_group, site, first_det) %>%
+  summarise(
+    mean_tags = mean(n_tags, na.rm = TRUE),
+    q25 = quantile(n_tags, 0.25, na.rm = TRUE),
+    q75 = quantile(n_tags, 0.75, na.rm = TRUE),
+    lo = pmin(q25, mean_tags),
+    hi = pmax(q75, mean_tags),
+    .groups = "drop"
+  )
+
+current_dat = daily_dat %>%
+  filter(spawn_yr == current_year)
+
+site_arrival_p = ggplot() +
+  geom_ribbon(
+    data = hist_dat,
+    aes(
+      x = first_det,
+      ymin = lo,
+      ymax = hi,
+      group = interaction(site, rel_group)
+    ),
+    fill = "grey70",
+    alpha = 0.12,
+    color = NA
+  ) +
+  geom_line(
+    data = hist_dat,
+    aes(
+      x = first_det,
+      y = mean_tags,
+      colour = rel_group,
+      group = interaction(site, rel_group)
+    ),
+    linewidth = 0.6,
+    alpha = 0.4,
+    linetype = "22",
+    lineend = "round"
+  ) +
+  geom_col(
+    data = current_dat,
+    aes(
+      x = first_det,
+      y = n_tags,
+      fill = rel_group
+    ),
+    width = 0.95,
+    colour = "white",
+    linewidth = 0.15
+  ) +
+  geom_vline(
+    xintercept = today_2020,
+    colour = "firebrick",
+    linetype = "dashed",
+    linewidth = 0.6
+  ) +
+  facet_grid(site ~ ., scales = "free_y") +
+  scale_x_date(
+    limits = c(start_date, end_date),
+    date_breaks = "1 weeks",
+    date_labels = "%b %d",
+    expand = expansion(mult = c(0.005, 0.01))
+  ) +
+  scale_fill_viridis_d(
+    option = "D",
+    end = 0.9,
+    name = "Release group"
+  ) +
+  scale_color_viridis_d(
+    option = "D",
+    end = 0.9,
+    guide = "none"
+  ) +
+  labs(
+    x = NULL,
+    y = "Observed Tags"
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(colour = "grey92"),
+    strip.background = element_rect(fill = "grey90", colour = "grey60"),
+    strip.text.y = element_text(face = "bold", angle = 0),
+    legend.position = "bottom",
+    #legend.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.spacing = unit(0.15, "lines")
+  )
+
+site_arrival_p
+
 ```
 
 ```{r tag-tbl, tab.cap = "PIT tags detected at South Fork Salmon River arrays by release group, release year, sort-by-code designation, and ocean age. Expanded estimates of adult escapement at each array were calculated from observed tags and expansion rates but were not adjusted for array detection efficiency."}

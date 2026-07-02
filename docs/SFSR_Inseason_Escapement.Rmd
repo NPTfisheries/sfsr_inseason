@@ -16,7 +16,6 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   bookdown::html_document2:
     theme: cerulean
-    self_contained: false
 ---
 
 <!-- the following inserts the NPT logo into header -->

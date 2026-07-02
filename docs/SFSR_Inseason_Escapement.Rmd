@@ -600,6 +600,10 @@ site_arrival_p = ggplot() +
     date_labels = "%b %d",
     expand = expansion(mult = c(0.005, 0.01))
   ) +
+  scale_y_continuous(
+    breaks = scales::breaks_pretty(n = 5),
+    labels = scales::label_number(accuracy = 1)
+  ) +
   scale_fill_viridis_d(
     option = "D",
     end = 0.9,

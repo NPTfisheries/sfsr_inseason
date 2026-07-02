@@ -1,5 +1,5 @@
 ---
-title: "In-season Escapement Estimates to SFG and KRS PIT-tag Arrays in the South Fork Salmon River"
+title: "In-season Escapement Estimates to South Fork Salmon River PIT-tag Arrays"
 author:
   - name: "Mike Ackerman"
     email: mikea@nezperce.org

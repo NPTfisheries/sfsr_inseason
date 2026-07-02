@@ -61,7 +61,6 @@ library(PITcleanr)
 # load latest compiled observation dataset based on dttm
 load(here("data/sfsr_chnk_compiled_obs_latest.rda"))
 current_year = year(update_dttm)
-# current_year = 2025
 
 # filter to current_year
 sfsr_comp_obs_df_yr = sfsr_comp_obs_df %>%
@@ -478,7 +477,7 @@ run_time_yr_p = ggplot() +
 run_time_yr_p
 ```
 
-```{r tmp, eval = T, fig.align = "center", fig.height = 9, fig.cap = "Daily counts of PIT-tagged adult Chinook salmon first detected at LGR and South Fork Salmon River IPTDS sites during the current spawn year. Bars show the number of tagged fish first detected each day, stacked by release group. Faint dashed lines and shaded ribbons represent the mean and interquartile range (25th-75th percentile), respectively, for each release group in previous years since 2020. The vertical dashed red line indicates the current date."}
+```{r site-arrival-p, eval = T, fig.align = "center", fig.height = 9, fig.cap = "Daily counts of PIT-tagged adult Chinook salmon first detected at LGR and South Fork Salmon River IPTDS sites during the current spawn year. Bars show the number of tagged fish first detected each day, stacked by release group. Faint dashed lines and shaded ribbons represent the mean and interquartile range (25th-75th percentile), respectively, for each release group in previous years since 2020. The vertical dashed red line indicates the current date."}
 
 site_levels = c("LGR", "SFG", "KRS", "ESS", "ZEN")
 

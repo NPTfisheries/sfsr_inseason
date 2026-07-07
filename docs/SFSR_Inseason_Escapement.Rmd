@@ -641,10 +641,10 @@ site_arrival_p
 ```{r travel-time-tbl, eval = T, tab.cap = "Mean travel time (days) between sites for PIT-tagged adult Chinook salmon detected at both sites, including all release groups. Historic values represent mean travel time for spawn years 2020 through the current year minus one. The n(Current) column is the number of fish included in the current-year estimate."}
 travel_pairs = tribble(
   ~from_site, ~to_site, ~travel_pair,
-  "LGR",      "SFG",    "LGR \u2192 SFG",
-  "SFG",      "KRS",    "SFG \u2192 KRS",
-  "SFG",      "ESS",    "SFG \u2192 ESS",
-  "SFG",      "ZEN",    "SFG \u2192 ZEN"
+  "LGR",      "SFG",    "LGR - SFG",
+  "SFG",      "KRS",    "SFG - KRS",
+  "SFG",      "ESS",    "SFG - ESS",
+  "SFG",      "ZEN",    "SFG - ZEN"
 )
 
 travel_dat = travel_pairs %>%
@@ -679,7 +679,7 @@ travel_dat = travel_pairs %>%
   ) %>%
   filter(
     travel_days >= 0,
-    !(travel_pair %in% c("SFG \u2192 ESS", "SFG \u2192 ZEN") & rel_group != "LGRLDR")
+    !(travel_pair %in% c("SFG - ESS", "SFG - ZEN") & rel_group != "LGRLDR")
   ) %>%
   mutate(
     rel_group_plot = factor(rel_group)

@@ -411,7 +411,7 @@ run_timing_today = obs_sum %>%
 
 ```
 
-```{r run-timing, fig.align = "center", fig.cap = paste0("Cumulative run timing of hatchery integrated, hatchery segregated, and unclipped returns of LGRLDR-released tags across South Fork Salmon River PIT-tag arrays. Historic returns from 2010 - ", current_year - 1, " (grey) and their average run timing (blue) provide context for the current ", current_year, " return (green). The vertical dashed red line indicates the last data download.")}
+```{r run-timing, fig.align = "center", fig.cap = paste0("Cumulative run timing of hatchery integrated, hatchery segregated, and unclipped returns of LGRLDR-released tags across South Fork Salmon River PIT-tag arrays (SFG and KRS only). Historic returns from 2010 - ", current_year - 1, " (grey) and their average run timing (blue) provide context for the current ", current_year, " return (green). The vertical dashed red line indicates date of last data retrieval.")}
 run_time_p = ggplot() +
   geom_line(
     data = obs_sum %>% filter(spawn_yr != current_year),
@@ -435,14 +435,17 @@ run_time_p = ggplot() +
     linetype = "dashed"
   ) +
   scale_x_date(
-    date_breaks = "3 weeks",
-    date_labels = "%b-%d"
+    date_breaks = "2 weeks",
+    date_labels = "%b %d"
   ) +
   facet_grid(rel_group ~ fct_rev(node)) +
-  theme_bw() +
   labs(
     x = NULL,
     y = "CDF"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
 run_time_p
@@ -462,8 +465,8 @@ run_time_yr_p = ggplot() +
     linetype = "dashed"
   ) +
   scale_x_date(
-    date_breaks = "4 weeks",
-    date_labels = "%b-%d"
+    date_breaks = "2 weeks",
+    date_labels = "%b %d"
   ) +
   scale_color_viridis_d(
     option = "D",
@@ -479,6 +482,7 @@ run_time_yr_p = ggplot() +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major.y = element_line(colour = "grey92"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
     strip.background = element_rect(fill = "grey90", colour = "grey60"),
     legend.position = "bottom"
   )
@@ -486,7 +490,7 @@ run_time_yr_p = ggplot() +
 run_time_yr_p
 ```
 
-```{r site-arrival-p, eval = T, fig.align = "center", fig.height = 9, fig.cap = "Daily counts of PIT-tagged adult Chinook salmon first detection at South Fork Salmon River IPTDS sites during the current spawn year. Bars show the number of fish first detected each day, stacked by release group. Dashed lines and shaded ribbons represent the historic mean and interquartile range (25th-75th percentile), respectively, for each release group since 2020. The vertical dashed red line is the current date."}
+```{r site-arrival-p, eval = T, fig.align = "center", fig.height = 9, fig.cap = "Daily counts of PIT-tagged adult spring-summer Chinook salmon first detection at South Fork Salmon River IPTDS during the current spawn year. Bars show the number of fish first detected each day, stacked by release group. Dashed lines and shaded ribbons represent the historic mean and interquartile range (25th-75th percentile), respectively, for each release group since 2020. The vertical dashed red line is the current date."}
 site_levels = c("LGR", "SFG", "KRS", "ESS", "ZEN")
 
 start_date = as.Date("2020-06-01")

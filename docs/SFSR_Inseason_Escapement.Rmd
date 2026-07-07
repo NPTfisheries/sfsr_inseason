@@ -452,7 +452,7 @@ run_time_p
 
 ```
 
-```{r run-timing-year, fig.align = "center", fig.height = 9, fig.cap = paste0("Cumulative run timing of PIT-tagged spring-summer Chinook salmon detected at South Fork Salmon River arrays by spawn year. Curves are shown separately for natural-origin (LGRLDR), hatchery integrated, and hatchery segregated. The vertical dashed red line indicates the last data download.")}
+```{r run-timing-year, fig.align = "center", fig.height = 9, fig.cap = paste0("Cumulative timing of PIT-tag detections for adult spring-summer Chinook salmon at South Fork Salmon River IPTDS sites by spawning year. Curves represent cumulative detections at the SFG and KRS sites and shown separately by release group. Individual fish may contribute detections at one or both sites. The vertical dashed line indicates the date of last data retrieval.")}
 run_time_yr_p = ggplot() +
   stat_ecdf(
     data = obs,
